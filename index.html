@@ -625,10 +625,10 @@ function runAnalysisQuiet(entry) {
   const kospiRets = calcReturns(kospiPrices), leverRets = calcReturns(leverPrices);
   const nasqRets = calcReturns(nasqPrices), vixRets = calcReturns(vixPrices);
 
-  const k_accel5 = getMAvgOfReturns(kospiRets, 5), k_accel10 = getMAvgOfReturns(kospiRets, 10), k_accel20 = getMAvgOfReturns(kospiRets, 20);
-  const l_accel5 = getMAvgOfReturns(leverRets, 5), l_accel10 = getMAvgOfReturns(leverRets, 10), l_accel20 = getMAvgOfReturns(leverRets, 20);
-  const n_accel5 = getMAvgOfReturns(nasqRets, 5), n_accel10 = getMAvgOfReturns(nasqRets, 10), n_accel20 = getMAvgOfReturns(nasqRets, 20);
-  const v_accel5 = getMAvgOfReturns(vixRets, 5), v_accel10 = getMAvgOfReturns(vixRets, 10), v_accel20 = getMAvgOfReturns(vixRets, 20);
+  const k_accel5 = calcAcceleration(kospiPrices, 5), k_accel10 = calcAcceleration(kospiPrices, 10), k_accel20 = calcAcceleration(kospiPrices, 20);
+  const l_accel5 = calcAcceleration(leverPrices, 5), l_accel10 = calcAcceleration(leverPrices, 10), l_accel20 = calcAcceleration(leverPrices, 20);
+  const n_accel5 = calcAcceleration(nasqPrices, 5), n_accel10 = calcAcceleration(nasqPrices, 10), n_accel20 = calcAcceleration(nasqPrices, 20);
+  const v_accel5 = calcAcceleration(vixPrices, 5), v_accel10 = calcAcceleration(vixPrices, 10), v_accel20 = calcAcceleration(vixPrices, 20);
 
   const kospiAlign = getAlignment(kospi, k5, k10, k20);
   const leverAlign = getAlignment(lever, l5, l10, l20);
@@ -834,6 +834,37 @@ function getMAvgOfReturns(rets, n) {
   return rets.slice(-n).reduce((a, b) => a + b, 0) / n;
 }
 
+// 평등락률 (가속도) — V5 엑셀과 동일한 계산
+// = (N일 등락합 / N) * 100 / (N-MA의 최근 5일 평균)
+// 즉, N일 평균 등락금액을 이중이동평균(MA의 MA)으로 정규화
+function calcAcceleration(prices, n) {
+  // n일 등락합 계산에 최소 n+1개, MA의MA에 최소 n+4개 필요
+  if (prices.length < n + 5) return null;
+
+  // 1) N일 등락 합계 (최근 n일간 일일 등락의 합)
+  let sumChange = 0;
+  for (let i = prices.length - n; i < prices.length; i++) {
+    sumChange += (prices[i] - prices[i - 1]);
+  }
+  const avgChange = sumChange / n;
+
+  // 2) N-MA의 최근 5일 평균 (이중 이동평균 = MA의 MA)
+  // 최근 5일간의 N-MA 값을 구해서 평균
+  const maValues = [];
+  for (let offset = 0; offset < 5; offset++) {
+    const endIdx = prices.length - offset;
+    if (endIdx < n) break;
+    const slice = prices.slice(endIdx - n, endIdx);
+    const ma = slice.reduce((a, b) => a + b, 0) / n;
+    maValues.push(ma);
+  }
+  if (maValues.length < 5) return null;
+  const maOfMa = maValues.reduce((a, b) => a + b, 0) / maValues.length;
+
+  if (!maOfMa || maOfMa === 0) return null;
+  return (avgChange * 100) / maOfMa;
+}
+
 function getAlignment(price, ma5, ma10, ma20) {
   if (!ma5 || !ma10 || !ma20) return null;
   if (price > ma5 && ma5 > ma10 && ma10 > ma20) return '정배열';
@@ -915,18 +946,18 @@ function runAnalysis() {
   const nasqRets = calcReturns(nasqPrices);
   const vixRets = calcReturns(vixPrices);
 
-  const k_accel5 = getMAvgOfReturns(kospiRets, 5);
-  const k_accel10 = getMAvgOfReturns(kospiRets, 10);
-  const k_accel20 = getMAvgOfReturns(kospiRets, 20);
-  const l_accel5 = getMAvgOfReturns(leverRets, 5);
-  const l_accel10 = getMAvgOfReturns(leverRets, 10);
-  const l_accel20 = getMAvgOfReturns(leverRets, 20);
-  const n_accel5 = getMAvgOfReturns(nasqRets, 5);
-  const n_accel10 = getMAvgOfReturns(nasqRets, 10);
-  const n_accel20 = getMAvgOfReturns(nasqRets, 20);
-  const v_accel5 = getMAvgOfReturns(vixRets, 5);
-  const v_accel10 = getMAvgOfReturns(vixRets, 10);
-  const v_accel20 = getMAvgOfReturns(vixRets, 20);
+  const k_accel5 = calcAcceleration(kospiPrices, 5);
+  const k_accel10 = calcAcceleration(kospiPrices, 10);
+  const k_accel20 = calcAcceleration(kospiPrices, 20);
+  const l_accel5 = calcAcceleration(leverPrices, 5);
+  const l_accel10 = calcAcceleration(leverPrices, 10);
+  const l_accel20 = calcAcceleration(leverPrices, 20);
+  const n_accel5 = calcAcceleration(nasqPrices, 5);
+  const n_accel10 = calcAcceleration(nasqPrices, 10);
+  const n_accel20 = calcAcceleration(nasqPrices, 20);
+  const v_accel5 = calcAcceleration(vixPrices, 5);
+  const v_accel10 = calcAcceleration(vixPrices, 10);
+  const v_accel20 = calcAcceleration(vixPrices, 20);
 
   // 배열 판단
   const kospiAlign = getAlignment(kospi, k5, k10, k20);
@@ -1586,46 +1617,47 @@ function showUploadPreview(data, newCount, updateCount, errors) {
 function confirmUpload() {
   if (pendingUploadData.length === 0) return;
 
-  let newCount = 0;
-  let updateCount = 0;
-
-  pendingUploadData.forEach(entry => {
-    const idx = allHistory.findIndex(h => h.date === entry.date);
-    if (idx >= 0) {
-      // 기존 항목 갱신: 업로드 데이터가 null이 아닌 필드만 덮어쓰기
-      const merged = { ...allHistory[idx] };
-      for (const key of Object.keys(entry)) {
-        if (entry[key] != null && entry[key] !== '' && entry[key] !== 0) {
-          merged[key] = entry[key];
-        }
+  // V5 엑셀 업로드 시 전체 교체 (엑셀이 master)
+  // 업로드 데이터가 기존보다 많으면 전체 교체, 아니면 병합
+  if (pendingUploadData.length >= allHistory.length * 0.8) {
+    // 전체 교체 모드
+    allHistory = [...pendingUploadData];
+    allHistory.sort((a, b) => a.date.localeCompare(b.date));
+    saveUserData();
+    renderHistory();
+    pendingUploadData = [];
+    document.getElementById('uploadPreview').classList.remove('show');
+    showToast('V5 데이터 전체 교체 완료 — ' + allHistory.length + '일분');
+  } else {
+    // 부분 병합 모드
+    let newCount = 0, updateCount = 0;
+    pendingUploadData.forEach(entry => {
+      const idx = allHistory.findIndex(h => h.date === entry.date);
+      if (idx >= 0) {
+        // 업로드 값으로 덮어쓰기
+        const merged = { ...allHistory[idx] };
+        if (entry.kospi != null) merged.kospi = entry.kospi;
+        if (entry.lever != null) merged.lever = entry.lever;
+        if (entry.nasq != null) merged.nasq = entry.nasq;
+        if (entry.vix != null) merged.vix = entry.vix;
+        if (entry.f_day != null) merged.f_day = entry.f_day;
+        if (entry.i_day != null) merged.i_day = entry.i_day;
+        if (entry.f5 != null) merged.f5 = entry.f5;
+        if (entry.i5 != null) merged.i5 = entry.i5;
+        allHistory[idx] = merged;
+        updateCount++;
+      } else {
+        allHistory.push(entry);
+        newCount++;
       }
-      // 날짜와 수치 필드는 항상 갱신
-      merged.date = entry.date;
-      if (entry.kospi != null) merged.kospi = entry.kospi;
-      if (entry.lever != null) merged.lever = entry.lever;
-      if (entry.nasq != null) merged.nasq = entry.nasq;
-      if (entry.vix != null) merged.vix = entry.vix;
-      merged.f_day = entry.f_day;
-      merged.i_day = entry.i_day;
-      if (entry.f5 != null) merged.f5 = entry.f5;
-      if (entry.i5 != null) merged.i5 = entry.i5;
-
-      allHistory[idx] = merged;
-      updateCount++;
-    } else {
-      allHistory.push(entry);
-      newCount++;
-    }
-  });
-
-  allHistory.sort((a, b) => a.date.localeCompare(b.date));
-  saveUserData();
-  renderHistory();
-
-  // 정리
-  pendingUploadData = [];
-  document.getElementById('uploadPreview').classList.remove('show');
-  showToast('업로드 완료 — 신규 ' + newCount + '건, 갱신 ' + updateCount + '건');
+    });
+    allHistory.sort((a, b) => a.date.localeCompare(b.date));
+    saveUserData();
+    renderHistory();
+    pendingUploadData = [];
+    document.getElementById('uploadPreview').classList.remove('show');
+    showToast('업로드 완료 — 신규 ' + newCount + '건, 갱신 ' + updateCount + '건');
+  }
 
   // 마지막 데이터로 자동 분석
   if (allHistory.length > 0) {
