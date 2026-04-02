@@ -570,7 +570,100 @@ window.onload = () => {
     today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   renderHistory();
   autoFetch();
+
+  // 히스토리에 데이터가 있으면 마지막 날짜 기준 자동 분석
+  if (allHistory.length > 0) {
+    runAnalysisFromHistory(allHistory[allHistory.length - 1]);
+  }
 };
+
+// 히스토리 엔트리를 기반으로 분석 실행 (입력 필드 거치지 않고 직접)
+function runAnalysisFromHistory(entry) {
+  if (!entry || !entry.kospi || !entry.lever || !entry.nasq || !entry.vix) return;
+
+  // 입력 필드에도 반영 (사용자가 볼 수 있게)
+  document.getElementById('i_kospi').value = entry.kospi;
+  document.getElementById('i_lever').value = entry.lever;
+  document.getElementById('i_nasq').value = entry.nasq;
+  document.getElementById('i_vix').value = entry.vix;
+  document.getElementById('i_foreign').value = entry.f_day || '';
+  document.getElementById('i_inst').value = entry.i_day || '';
+  document.getElementById('i_foreign5').value = entry.f5 || '';
+  document.getElementById('i_inst5').value = entry.i5 || '';
+  document.getElementById('i_date').value = entry.date.replace(/\//g, '-');
+  document.getElementById('i_memo').value = entry.memo || '';
+
+  // 분석 실행 (조용히 — 탭 전환하지 않음)
+  runAnalysisQuiet(entry);
+}
+
+// 조용한 분석: 탭 전환 없이 결과만 계산 + 렌더링
+function runAnalysisQuiet(entry) {
+  const { date, kospi, lever, nasq, vix } = entry;
+  const fDay = entry.f_day || 0;
+  const iDay = entry.i_day || 0;
+  const f5 = entry.f5 || null;
+  const i5 = entry.i5 || null;
+  const memo = entry.memo || '';
+
+  const kospiPrices = allHistory.map(h => h.kospi).filter(v => v != null);
+  const leverPrices = allHistory.map(h => h.lever).filter(v => v != null);
+  const nasqPrices = allHistory.map(h => h.nasq).filter(v => v != null);
+  const vixPrices = allHistory.map(h => h.vix).filter(v => v != null);
+
+  const k5 = calcMA(kospiPrices, 5), k10 = calcMA(kospiPrices, 10), k20 = calcMA(kospiPrices, 20);
+  const kVs5 = pct(kospi, k5), kVs10 = pct(kospi, k10), kVs20 = pct(kospi, k20);
+  const l5 = calcMA(leverPrices, 5), l10 = calcMA(leverPrices, 10), l20 = calcMA(leverPrices, 20);
+  const lVs5 = pct(lever, l5), lVs10 = pct(lever, l10), lVs20 = pct(lever, l20);
+  const n5 = calcMA(nasqPrices, 5), n10 = calcMA(nasqPrices, 10), n20 = calcMA(nasqPrices, 20);
+  const nVs5 = pct(nasq, n5), nVs10 = pct(nasq, n10), nVs20 = pct(nasq, n20);
+  const prevVix = vixPrices.length >= 2 ? vixPrices[vixPrices.length - 2] : null;
+  const vixChg = prevVix ? pct(vix, prevVix) : null;
+  const vix5MA = calcMA(vixPrices, 5);
+  const vixVs5MA = pct(vix, vix5MA);
+
+  const kospiRets = calcReturns(kospiPrices), leverRets = calcReturns(leverPrices);
+  const nasqRets = calcReturns(nasqPrices), vixRets = calcReturns(vixPrices);
+
+  const k_accel5 = getMAvgOfReturns(kospiRets, 5), k_accel10 = getMAvgOfReturns(kospiRets, 10), k_accel20 = getMAvgOfReturns(kospiRets, 20);
+  const l_accel5 = getMAvgOfReturns(leverRets, 5), l_accel10 = getMAvgOfReturns(leverRets, 10), l_accel20 = getMAvgOfReturns(leverRets, 20);
+  const n_accel5 = getMAvgOfReturns(nasqRets, 5), n_accel10 = getMAvgOfReturns(nasqRets, 10), n_accel20 = getMAvgOfReturns(nasqRets, 20);
+  const v_accel5 = getMAvgOfReturns(vixRets, 5), v_accel10 = getMAvgOfReturns(vixRets, 10), v_accel20 = getMAvgOfReturns(vixRets, 20);
+
+  const kospiAlign = getAlignment(kospi, k5, k10, k20);
+  const leverAlign = getAlignment(lever, l5, l10, l20);
+  const nasqAlign = getAlignment(nasq, n5, n10, n20);
+
+  let goStatus = 'GO', goReasons = [];
+  if (vix >= 25) { goStatus = 'NOGO'; goReasons.push('VIX ≥ 25 (STOP)'); }
+  else if (vix >= 20) { goStatus = 'CAUTION'; goReasons.push('VIX 20-25 (주의)'); }
+  if (leverAlign === '역배열') { if (goStatus === 'GO') goStatus = 'CAUTION'; goReasons.push('레버리지 역배열'); }
+  if (f5 !== null && f5 < 0 && i5 !== null && i5 < 0) { if (goStatus === 'GO') goStatus = 'CAUTION'; goReasons.push('외인+기관 5일 동반 매도'); }
+  if (goReasons.length === 0) goReasons.push('전 구간 양호');
+
+  lastResult = {
+    date, kospi, lever, nasq, vix, fDay, iDay, f5, i5,
+    k5, k10, k20, kVs5, kVs10, kVs20,
+    l5, l10, l20, lVs5, lVs10, lVs20,
+    n5, n10, n20, nVs5, nVs10, nVs20,
+    vixChg, vix5MA, vixVs5MA,
+    k_accel5, k_accel10, k_accel20, l_accel5, l_accel10, l_accel20,
+    n_accel5, n_accel10, n_accel20, v_accel5, v_accel10, v_accel20,
+    kospiAlign, leverAlign, nasqAlign, goStatus, goReasons, memo
+  };
+
+  // GO badge
+  const badge = document.getElementById('goBadge');
+  badge.style.display = 'block';
+  badge.className = 'go-badge ' + goStatus;
+  badge.textContent = goStatus === 'GO' ? '✅ GO' : goStatus === 'NOGO' ? '🛑 NO-GO' : '⚠️ 주의';
+
+  renderResult(lastResult);
+
+  // 로컬 브리핑 미리 표시 (API 브리핑은 사용자가 분석 실행 시)
+  const localBriefing = generateLocalBriefing(lastResult);
+  document.getElementById('briefingBox').textContent = localBriefing;
+}
 
 // ── 4. TAB SWITCHING ─────────────────────────────────────────
 function switchTab(name) {
@@ -687,13 +780,10 @@ async function fetchVix() {
 function loadLastData() {
   const last = allHistory[allHistory.length - 1];
   if (!last) { showToast('히스토리가 비어 있습니다.'); return; }
-  if (last.kospi) document.getElementById('i_kospi').value = last.kospi;
-  if (last.lever) document.getElementById('i_lever').value = last.lever;
-  if (last.f_day != null) document.getElementById('i_foreign').value = last.f_day;
-  if (last.i_day != null) document.getElementById('i_inst').value = last.i_day;
-  if (last.f5 != null) document.getElementById('i_foreign5').value = last.f5;
-  if (last.i5 != null) document.getElementById('i_inst5').value = last.i5;
-  showToast('전일(' + last.date + ') 데이터 로드 완료');
+  // 데이터 로드 + 즉시 분석
+  runAnalysisFromHistory(last);
+  showToast('전일(' + last.date + ') 분석 완료');
+  switchTab('result');
 }
 
 // ── 8. UTILITY FUNCTIONS ──────────────────────────────────────
@@ -1499,6 +1589,12 @@ function confirmUpload() {
   pendingUploadData = [];
   document.getElementById('uploadPreview').classList.remove('show');
   showToast('업로드 완료 — 신규 ' + newCount + '건, 갱신 ' + updateCount + '건');
+
+  // 마지막 데이터로 자동 분석
+  if (allHistory.length > 0) {
+    runAnalysisFromHistory(allHistory[allHistory.length - 1]);
+    switchTab('result');
+  }
 }
 
 function cancelUpload() {
