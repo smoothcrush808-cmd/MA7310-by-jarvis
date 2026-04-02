@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>자비스 MA7310</title>
+<title>MA7310</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -593,7 +593,7 @@ function showToast(msg, duration = 2500) {
 // ── 6. AUTO FETCH (무료 금융 API) ──────────────────────────────
 // 전략: Alpha Vantage (무료, CORS 허용) → Yahoo Finance (CORS 프록시) → 수동 입력
 // Alpha Vantage 무료 키: https://www.alphavantage.co/support/#api-key 에서 발급
-const ALPHA_VANTAGE_KEY = 'demo'; // ← 여기에 본인 API 키 입력 (무료 발급)
+const ALPHA_VANTAGE_KEY = 62416401 ; // ← 여기에 본인 API 키 입력 (무료 발급)
 
 async function autoFetch() {
   document.getElementById('nasq_status').textContent = '🔄 조회 중...';
