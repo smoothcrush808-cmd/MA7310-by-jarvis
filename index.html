@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MA7310</title>
+<title>자비스 MA7310</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -593,7 +593,7 @@ function showToast(msg, duration = 2500) {
 // ── 6. AUTO FETCH (무료 금융 API) ──────────────────────────────
 // 전략: Alpha Vantage (무료, CORS 허용) → Yahoo Finance (CORS 프록시) → 수동 입력
 // Alpha Vantage 무료 키: https://www.alphavantage.co/support/#api-key 에서 발급
-const ALPHA_VANTAGE_KEY = 62416401 ; // ← 여기에 본인 API 키 입력 (무료 발급)
+const ALPHA_VANTAGE_KEY = 'demo'; // ← 여기에 본인 API 키 입력 (무료 발급)
 
 async function autoFetch() {
   document.getElementById('nasq_status').textContent = '🔄 조회 중...';
@@ -1160,22 +1160,135 @@ function processFile(file) {
     try {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-      if (json.length < 2) {
-        alert('데이터가 없습니다. 헤더 + 최소 1행 이상 필요합니다.');
-        return;
+      // V5 엑셀 자동 감지: KOSPI, lever, NASQ, VIX 시트가 모두 있으면 V5 형식
+      const sheetNames = workbook.SheetNames.map(s => s.toLowerCase());
+      const isV5 = ['kospi', 'lever', 'nasq', 'vix'].every(
+        name => sheetNames.includes(name) || sheetNames.includes(name.toLowerCase())
+      );
+
+      if (isV5) {
+        parseV5Excel(workbook);
+      } else {
+        // 일반 단일시트 형식
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        if (json.length < 2) {
+          alert('데이터가 없습니다. 헤더 + 최소 1행 이상 필요합니다.');
+          return;
+        }
+        parseUploadData(json);
       }
-
-      parseUploadData(json);
     } catch (err) {
       alert('파일 읽기 오류: ' + err.message);
       console.error(err);
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+// V5 엑셀 (멀티시트) 파싱: KOSPI/lever/NASQ/VIX/수급 시트에서 데이터 수집
+function parseV5Excel(workbook) {
+  // 시트 이름 매핑 (대소문자 무관)
+  function findSheet(name) {
+    const found = workbook.SheetNames.find(s => s.toLowerCase() === name.toLowerCase());
+    return found ? workbook.Sheets[found] : null;
+  }
+
+  // 각 시트에서 A열(일자) + B열(종가) 추출 (행4부터 데이터)
+  function extractPrices(sheetName) {
+    const sheet = findSheet(sheetName);
+    if (!sheet) return {};
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const map = {};
+    // 행3(인덱스2)이 헤더, 행4(인덱스3)부터 데이터
+    for (let i = 3; i < json.length; i++) {
+      const row = json[i];
+      if (!row || !row[0] || !row[1]) continue;
+      const date = normalizeDate(row[0]);
+      if (date) map[date] = parseFloat(row[1]);
+    }
+    return map;
+  }
+
+  // 수급 시트 추출: A(일자), B(개인), C(외국인), D(기관계), E(외인5일), F(기관5일)
+  function extractSupply() {
+    const sheet = findSheet('수급(KSP)') || findSheet('수급') || findSheet('supply');
+    if (!sheet) return {};
+    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    const map = {};
+    for (let i = 3; i < json.length; i++) {
+      const row = json[i];
+      if (!row || !row[0]) continue;
+      const date = normalizeDate(row[0]);
+      if (!date) continue;
+      map[date] = {
+        f_day: row[2] != null ? parseFloat(row[2]) : 0,  // C열: 외국인
+        i_day: row[3] != null ? parseFloat(row[3]) : 0,  // D열: 기관계
+        f5: row[4] != null ? parseFloat(row[4]) : null,   // E열: 외인5일
+        i5: row[5] != null ? parseFloat(row[5]) : null,   // F열: 기관5일
+      };
+    }
+    return map;
+  }
+
+  const kospiMap = extractPrices('KOSPI');
+  const leverMap = extractPrices('lever');
+  const nasqMap = extractPrices('NASQ');
+  const vixMap = extractPrices('VIX');
+  const supplyMap = extractSupply();
+
+  // 모든 날짜 수집 후 병합
+  const allDates = new Set([
+    ...Object.keys(kospiMap),
+    ...Object.keys(leverMap),
+    ...Object.keys(nasqMap),
+    ...Object.keys(vixMap)
+  ]);
+
+  const parsed = [];
+  for (const date of allDates) {
+    const kospi = kospiMap[date];
+    const lever = leverMap[date];
+    const nasq = nasqMap[date];
+    const vix = vixMap[date];
+
+    // 최소 하나의 가격 데이터가 있어야 유효
+    if (!kospi && !lever && !nasq && !vix) continue;
+
+    const supply = supplyMap[date] || { f_day: 0, i_day: 0, f5: null, i5: null };
+
+    parsed.push({
+      date, kospi, lever, nasq, vix,
+      f_day: supply.f_day,
+      i_day: supply.i_day,
+      f5: supply.f5,
+      i5: supply.i5,
+      memo: ''
+    });
+  }
+
+  parsed.sort((a, b) => a.date.localeCompare(b.date));
+
+  if (parsed.length === 0) {
+    alert('V5 엑셀에서 유효한 데이터를 찾을 수 없습니다.');
+    return;
+  }
+
+  // 기존 히스토리와 비교
+  const existingDates = new Set(allHistory.map(h => h.date));
+  let newCount = 0;
+  let updateCount = 0;
+  parsed.forEach(p => {
+    if (existingDates.has(p.date)) updateCount++;
+    else newCount++;
+  });
+
+  pendingUploadData = parsed;
+  showToast('V5 엑셀 감지 — ' + parsed.length + '일분 데이터 파싱 완료');
+  showUploadPreview(parsed, newCount, updateCount, []);
 }
 
 function normalizeDate(raw) {
