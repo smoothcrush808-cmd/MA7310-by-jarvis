@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MA7310</title>
+<title>JARVIS MA7310</title>
 <link rel="apple-touch-icon" href="jarvis-icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="자비스 MA7310">
+<meta name="apple-mobile-web-app-title" content="JARVIS MA7310">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -347,22 +347,81 @@
 <body>
 
 <div class="header">
-  <div class="logo">자비스 <span>MA7310</span></div>
+  <div class="logo">JARVIS <span>MA7310</span></div>
   <div class="header-date" id="headerDate">-</div>
   <div class="go-badge" id="goBadge" style="display:none"></div>
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('input')">📊 데이터 입력</div>
+  <div class="tab active" onclick="switchTab('principles')">📌 이용원칙</div>
+  <div class="tab" onclick="switchTab('input')">📊 데이터 입력</div>
   <div class="tab" onclick="switchTab('result')">📈 분석 결과</div>
-  <div class="tab" onclick="switchTab('briefing')">🤖 자비스 브리핑</div>
+  <div class="tab" onclick="switchTab('briefing')">🤖 JARVIS 브리핑</div>
   <div class="tab" onclick="switchTab('history')">📋 히스토리</div>
 </div>
 
 <div class="main">
 
+  <!-- PRINCIPLES TAB -->
+  <div class="section active" id="tab-principles">
+    <div class="result-card" style="margin-bottom:14px;">
+      <div class="result-title">🧭 나의 매매 철학</div>
+      <div style="padding:16px; line-height:1.9; font-size:14px;">
+        <p style="margin-bottom:12px; font-weight:500; color:var(--text);">
+          나는 <strong style="color:var(--accent);">추세추종 트레이더</strong>다.<br>
+          레버리지 ETF로 1~3일 단타를 치고, 진입근거가 깨지면 즉시 손절한다.<br>
+          가격이 답이다 — 누가 사고 파는지보다 실제로 오르고 있느냐가 중요하다.
+        </p>
+        <p style="margin-bottom:0; padding:10px 14px; background:rgba(209,41,61,0.06); border-left:3px solid var(--dn); border-radius:0 6px 6px 0;">
+          <strong style="color:var(--dn);">⚠️ 나의 약점:</strong> 평등락률 반전 "조짐"만 보여도 뛰어들고 싶은 충동이 있다.<br>
+          이 충동을 인정하고, 시스템으로 제어한다.
+        </p>
+      </div>
+    </div>
+
+    <div class="result-card" style="margin-bottom:14px;">
+      <div class="result-title">🤖 JARVIS MA7310이란?</div>
+      <div style="padding:16px; line-height:1.9; font-size:14px;">
+        <p style="margin-bottom:12px;">
+          매매 타이밍을 잡아주는 도구가 <strong style="color:var(--dn);">아니다.</strong><br>
+          <strong style="color:var(--accent);">"지금 매매해도 되는 환경인가"</strong>를 판단하는 <strong>환경 필터</strong>다.<br>
+          신호등이지, 내비게이션이 아니다.
+        </p>
+      </div>
+    </div>
+
+    <div class="result-card" style="margin-bottom:14px;">
+      <div class="result-title">📋 활용 원칙</div>
+      <div style="padding:16px; line-height:1.9; font-size:14px;">
+        <div style="margin-bottom:10px; padding:10px 14px; background:rgba(209,41,61,0.06); border-radius:6px;">
+          🛑 <strong>NO-GO</strong> → 절대 진입하지 않는다. 아무리 좋은 조짐이 보여도.
+        </div>
+        <div style="margin-bottom:10px; padding:10px 14px; background:rgba(192,123,0,0.06); border-radius:6px;">
+          ⚠️ <strong>CAUTION</strong> → 멈추고 한 번 더 생각한다. 근거가 충분한가?
+        </div>
+        <div style="margin-bottom:10px; padding:10px 14px; background:rgba(10,143,79,0.06); border-radius:6px;">
+          ✅ <strong>GO</strong> → 환경은 OK. 최종 판단은 나의 몫이다.
+        </div>
+        <div style="margin-bottom:10px; padding:10px 14px; background:rgba(0,119,204,0.06); border-radius:6px;">
+          🚦 <strong>"진입근거: 없음"</strong>이면 기다린다. 조급함이 아니라 확인이 수익을 만든다.
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card" style="margin-bottom:14px;">
+      <div class="result-title">💡 잊지 말 것</div>
+      <div style="padding:16px; line-height:1.9; font-size:14px; text-align:center;">
+        <p style="font-size:15px; font-weight:500; color:var(--accent);">
+          JARVIS는 참고 도구다.<br>
+          맹신하지도, 무시하지도 않는다.<br>
+          원칙을 지키는 건 결국 <strong>나 자신</strong>이다.
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- INPUT TAB -->
-  <div class="section active" id="tab-input">
+  <div class="section" id="tab-input">
     <div style="margin-bottom:10px; color:var(--muted); font-size:11px;">
       ※ 나스닥·VIX는 자동조회 시도. 코스피·레버리지·수급은 영웅문4에서 입력.
     </div>
@@ -451,11 +510,15 @@
     <div class="signal-row" id="signalRow"></div>
     <div class="result-grid" style="grid-template-columns: 1fr;">
       <div class="result-card full-result">
-        <div class="result-title">📊 대시보드 — STEP 1: 매크로 공포</div>
-        <table id="dashTable1"></table>
+        <div class="result-title">📊 STEP 1: VIX 공포 지수</div>
+        <table id="dashVix"></table>
       </div>
       <div class="result-card full-result">
-        <div class="result-title">📊 대시보드 — STEP 2: 수급 + STEP 3: 레버리지</div>
+        <div class="result-title">📊 STEP 2: KOSPI + 수급</div>
+        <table id="dashSupply"></table>
+      </div>
+      <div class="result-card full-result">
+        <div class="result-title">📊 STEP 3: 레버리지</div>
         <table id="dashTable2"></table>
       </div>
       <div class="result-card full-result">
@@ -472,7 +535,7 @@
   <!-- BRIEFING TAB -->
   <div class="section" id="tab-briefing">
     <div class="briefing-box" id="briefingBox">
-      <div class="briefing-loading">분석 실행 후 자비스 브리핑이 여기에 표시됩니다.</div>
+      <div class="briefing-loading">분석 실행 후 JARVIS 브리핑이 여기에 표시됩니다.</div>
     </div>
     <div class="btn-row">
       <button class="btn btn-success" onclick="downloadExcel()">📥 엑셀 다운로드 (전체 히스토리)</button>
@@ -511,7 +574,7 @@
 
 <script>
 // ══════════════════════════════════════════════════════════════
-// 자비스 MA7310 — v2 (Bug-fixed & Enhanced)
+// JARVIS MA7310 — v2 (Bug-fixed & Enhanced)
 // ══════════════════════════════════════════════════════════════
 
 // ── 1. V5 HISTORICAL SEED DATA ───────────────────────────────
@@ -643,10 +706,13 @@ function runAnalysisQuiet(entry) {
   if (vix >= 25) { goStatus = 'NOGO'; goReasons.push('VIX ≥ 25 (STOP)'); }
   else if (vix >= 20) { goStatus = 'CAUTION'; goReasons.push('VIX 20-25 (주의)'); }
   if (leverAlign === '역배열') { if (goStatus === 'GO') goStatus = 'CAUTION'; goReasons.push('레버리지 역배열'); }
-  if (f5 !== null && f5 < 0 && i5 !== null && i5 < 0) { if (goStatus === 'GO') goStatus = 'CAUTION'; goReasons.push('외인+기관 5일 동반 매도'); }
+  // 평등락률 5일 음수 + 전일대비 악화
+  const prev_l_accel5 = calcAcceleration(leverPrices.slice(0, -1), 5);
+  if (l_accel5 != null && l_accel5 < 0 && prev_l_accel5 != null && l_accel5 < prev_l_accel5) {
+    if (goStatus === 'GO') goStatus = 'CAUTION';
+    goReasons.push('레버리지 평등락률 악화 (' + fmtPct(l_accel5) + ')');
+  }
   if (goReasons.length === 0) goReasons.push('전 구간 양호');
-
-  // 변동폭
   const vol_k5 = calcVolatility(kospiPrices, 5), vol_k10 = calcVolatility(kospiPrices, 10), vol_k20 = calcVolatility(kospiPrices, 20);
   const vol_l5 = calcVolatility(leverPrices, 5), vol_l10 = calcVolatility(leverPrices, 10), vol_l20 = calcVolatility(leverPrices, 20);
   const vol_n5 = calcVolatility(nasqPrices, 5), vol_n10 = calcVolatility(nasqPrices, 10), vol_n20 = calcVolatility(nasqPrices, 20);
@@ -662,7 +728,8 @@ function runAnalysisQuiet(entry) {
     n_accel5, n_accel10, n_accel20, v_accel5, v_accel10, v_accel20,
     vol_k5, vol_k10, vol_k20, vol_l5, vol_l10, vol_l20,
     vol_n5, vol_n10, vol_n20, vol_v5, vol_v10, vol_v20,
-    kospiAlign, leverAlign, nasqAlign, goStatus, goReasons, memo
+    kospiAlign, leverAlign, nasqAlign, goStatus, goReasons, memo,
+    _prev_l_accel5: prev_l_accel5
   };
 
   // GO badge
@@ -673,14 +740,14 @@ function runAnalysisQuiet(entry) {
 
   renderResult(lastResult);
 
-  // 로컬 브리핑 미리 표시 (API 브리핑은 사용자가 분석 실행 시)
+  // 로컬 브리핑 미리 표시
   const localBriefing = generateLocalBriefing(lastResult);
   document.getElementById('briefingBox').textContent = localBriefing;
 }
 
 // ── 4. TAB SWITCHING ─────────────────────────────────────────
 function switchTab(name) {
-  const names = ['input', 'result', 'briefing', 'history'];
+  const names = ['principles', 'input', 'result', 'briefing', 'history'];
   document.querySelectorAll('.tab').forEach((t, i) => {
     t.classList.toggle('active', names[i] === name);
   });
@@ -944,7 +1011,12 @@ function runAnalysis() {
   if (vix >= 25) { goStatus = 'NOGO'; goReasons.push('VIX ≥ 25 (STOP)'); }
   else if (vix >= 20) { goStatus = 'CAUTION'; goReasons.push('VIX 20-25 (주의)'); }
   if (leverAlign === '역배열') { if (goStatus === 'GO') goStatus = 'CAUTION'; goReasons.push('레버리지 역배열'); }
-  if (f5 !== null && f5 < 0 && i5 !== null && i5 < 0) { if (goStatus === 'GO') goStatus = 'CAUTION'; goReasons.push('외인+기관 5일 동반 매도'); }
+  // 평등락률 5일 음수 + 전일대비 악화
+  const prev_l_accel5_main = calcAcceleration(leverPrices.slice(0, -1), 5);
+  if (l_accel5 != null && l_accel5 < 0 && prev_l_accel5_main != null && l_accel5 < prev_l_accel5_main) {
+    if (goStatus === 'GO') goStatus = 'CAUTION';
+    goReasons.push('레버리지 평등락률 악화 (' + fmtPct(l_accel5) + ')');
+  }
   if (goReasons.length === 0) goReasons.push('전 구간 양호');
 
   const vol_k5 = calcVolatility(kospiPrices, 5), vol_k10 = calcVolatility(kospiPrices, 10), vol_k20 = calcVolatility(kospiPrices, 20);
@@ -962,7 +1034,8 @@ function runAnalysis() {
     n_accel5, n_accel10, n_accel20, v_accel5, v_accel10, v_accel20,
     vol_k5, vol_k10, vol_k20, vol_l5, vol_l10, vol_l20,
     vol_n5, vol_n10, vol_n20, vol_v5, vol_v10, vol_v20,
-    kospiAlign, leverAlign, nasqAlign, goStatus, goReasons, memo
+    kospiAlign, leverAlign, nasqAlign, goStatus, goReasons, memo,
+    _prev_l_accel5: prev_l_accel5_main
   };
 
   // GO badge
@@ -1030,28 +1103,50 @@ function renderResult(r) {
   document.getElementById('signalRow').innerHTML =
     signals.map(s => '<span class="signal-chip ' + s.cls + '">' + s.label + '</span>').join('');
 
-  // 대시보드 STEP1: VIX + STEP2: 수급
-  // [FIX #8] VIX 행에서 전일비와 vs5MA를 분리 표시
-  document.getElementById('dashTable1').innerHTML =
-    '<thead><tr><th>구분</th><th>수치</th><th>전일비</th><th>vs 5MA%</th></tr></thead>' +
+  // STEP 1: VIX 공포 지수 + 구간별 해석
+  const vixLevel = r.vix >= 30 ? '🔴 극단적 공포' :
+                   r.vix >= 25 ? '🟠 공포 (매매 중단 권장)' :
+                   r.vix >= 20 ? '🟡 불안 (신중한 접근)' :
+                   r.vix >= 15 ? '🟢 평온 (정상 범위)' :
+                   '🔵 안정 (낙관적)';
+  const vixColor = r.vix >= 25 ? 'dn' : r.vix >= 20 ? 'warn' : 'up';
+
+  document.getElementById('dashVix').innerHTML =
     '<tbody>' +
-    '<tr><td class="row-label">VIX</td>' +
-      '<td class="' + (r.vix >= 25 ? 'dn' : r.vix >= 20 ? 'warn' : 'up') + '">' + fmt(r.vix) + '</td>' +
-      '<td class="' + colClass(r.vixChg) + '">' + fmtPct(r.vixChg) + '</td>' +
-      '<td class="' + colClass(r.vixVs5MA) + '">' + fmtPct(r.vixVs5MA) + '</td></tr>' +
+    '<tr><td class="row-label" style="font-size:14px;">VIX 현재</td>' +
+      '<td style="font-size:22px;font-weight:700;" class="' + vixColor + '">' + fmt(r.vix) + '</td>' +
+      '<td class="' + colClass(r.vixChg) + '">전일비 ' + fmtPct(r.vixChg) + '</td>' +
+      '<td class="' + colClass(r.vixVs5MA) + '">vs5MA ' + fmtPct(r.vixVs5MA) + '</td></tr>' +
+    '<tr><td colspan="4" style="font-size:14px;font-weight:700;padding:8px 10px;" class="' + vixColor + '">' + vixLevel + '</td></tr>' +
+    '<tr><td colspan="4" style="padding:6px 10px;border-top:1px solid var(--border);">' +
+      '<div style="font-size:11px;color:var(--muted);line-height:1.8;">' +
+      '<span class="dn">■</span> 30↑ 극단적 공포 &nbsp;&nbsp;' +
+      '<span class="dn">■</span> 25~30 공포 &nbsp;&nbsp;' +
+      '<span class="warn">■</span> 20~25 불안 &nbsp;&nbsp;' +
+      '<span class="up">■</span> 15~20 평온 &nbsp;&nbsp;' +
+      '<span style="color:var(--accent)">■</span> 15↓ 안정' +
+      '</div></td></tr>' +
+    '</tbody>';
+
+  // STEP 2: KOSPI + 수급
+  document.getElementById('dashSupply').innerHTML =
+    '<thead><tr><th>구분</th><th>수치</th><th colspan="2">상세</th></tr></thead>' +
+    '<tbody>' +
     '<tr><td class="row-label">KOSPI</td>' +
-      '<td>' + fmt(r.kospi) + '</td>' +
-      '<td class="' + colClass(r.kVs5) + '">' + fmtPct(r.kVs5) + '</td>' +
-      '<td class="' + colClass(r.kVs10) + '">' + fmtPct(r.kVs10) + '</td></tr>' +
-    '<tr><td class="row-label">외국인5일</td>' +
-      '<td class="' + colClass(r.f5) + '">' + (r.f5 != null ? (r.f5 > 0 ? '+' : '') + Math.round(r.f5) + '억' : '-') + '</td>' +
+      '<td style="font-weight:700;">' + fmt(r.kospi) + '</td>' +
+      '<td class="' + colClass(r.kVs5) + '">vs5MA ' + fmtPct(r.kVs5) + '</td>' +
+      '<td class="' + colClass(r.kVs10) + '">vs10MA ' + fmtPct(r.kVs10) + '</td></tr>' +
+    '<tr><td class="row-label">배열</td>' +
+      '<td colspan="3" class="' + (r.kospiAlign === '정배열' ? 'up' : r.kospiAlign === '역배열' ? 'dn' : 'warn') + '" style="font-weight:700;">' + (r.kospiAlign || '-') + '</td></tr>' +
+    '<tr style="border-top:1px solid var(--border);"><td class="row-label">외국인 5일</td>' +
+      '<td class="' + colClass(r.f5) + '" style="font-weight:700;">' + (r.f5 != null ? (r.f5 > 0 ? '+' : '') + Math.round(r.f5) + '억' : '-') + '</td>' +
       '<td colspan="2" style="color:var(--muted)">당일: ' + (r.fDay != null ? (r.fDay > 0 ? '+' : '') + Math.round(r.fDay) + '억' : '-') + '</td></tr>' +
-    '<tr><td class="row-label">기관5일</td>' +
-      '<td class="' + colClass(r.i5) + '">' + (r.i5 != null ? (r.i5 > 0 ? '+' : '') + Math.round(r.i5) + '억' : '-') + '</td>' +
+    '<tr><td class="row-label">기관 5일</td>' +
+      '<td class="' + colClass(r.i5) + '" style="font-weight:700;">' + (r.i5 != null ? (r.i5 > 0 ? '+' : '') + Math.round(r.i5) + '억' : '-') + '</td>' +
       '<td colspan="2" style="color:var(--muted)">당일: ' + (r.iDay != null ? (r.iDay > 0 ? '+' : '') + Math.round(r.iDay) + '억' : '-') + '</td></tr>' +
     '</tbody>';
 
-  // 대시보드 STEP3 레버리지
+  // STEP 3: 레버리지
   document.getElementById('dashTable2').innerHTML =
     '<thead><tr><th>구분</th><th>5MA</th><th>10MA</th><th>20MA</th></tr></thead>' +
     '<tbody>' +
@@ -1113,34 +1208,34 @@ function renderResult(r) {
 // ── 11. BRIEFING (Claude API) ─────────────────────────────────
 async function generateBriefing(r) {
   switchTab('briefing');
-  document.getElementById('briefingBox').innerHTML = '<div class="briefing-loading">🤖 자비스 브리핑 생성 중...</div>';
+  document.getElementById('briefingBox').innerHTML = '<div class="briefing-loading">🤖 JARVIS 브리핑 생성 중...</div>';
 
-  const prompt = `당신은 MA7310 트레이딩 시스템 기반의 시장 분석 어시스턴트 자비스입니다.
-트레이더 초이의 방법론에 따라 오늘 매매 환경을 브리핑해주세요.
+  const prompt = `당신은 MA7310 트레이딩 시스템의 JARVIS입니다.
+사용자는 추세추종 레버리지 ETF 단타(1~3일) 트레이더입니다.
+약점: 평등락률 반전 "조짐"에 조급하게 진입하는 경향이 있습니다.
+JARVIS의 역할: 매매 타이밍이 아닌 "환경 필터" — 매매해도 되는 환경인지 판단.
 
 [오늘 데이터: ${r.date}]
-- KOSPI: ${r.kospi} (vs5MA: ${fmtPct(r.kVs5)}, vs10MA: ${fmtPct(r.kVs10)}, vs20MA: ${fmtPct(r.kVs20)})
-- 레버리지: ${r.lever} (vs5MA: ${fmtPct(r.lVs5)}, vs10MA: ${fmtPct(r.lVs10)}, vs20MA: ${fmtPct(r.lVs20)})
-- 배열: KOSPI ${r.kospiAlign}, 레버리지 ${r.leverAlign}
-- 나스닥: ${r.nasq} (vs5MA: ${fmtPct(r.nVs5)}, vs10MA: ${fmtPct(r.nVs10)}, vs20MA: ${fmtPct(r.nVs20)}, 배열: ${r.nasqAlign})
-- VIX: ${r.vix} (전일비: ${fmtPct(r.vixChg)}, vs5MA: ${fmtPct(r.vixVs5MA)})
-- 코스피 수급 — 외국인5일: ${r.f5 != null ? Math.round(r.f5) + '억' : '미입력'}, 기관5일: ${r.i5 != null ? Math.round(r.i5) + '억' : '미입력'}
+- KOSPI: ${r.kospi} (배열: ${r.kospiAlign})
+- 레버리지: ${r.lever} (배열: ${r.leverAlign}, vs5MA: ${fmtPct(r.lVs5)})
+- 나스닥: ${r.nasq} (배열: ${r.nasqAlign})
+- VIX: ${r.vix} (전일비: ${fmtPct(r.vixChg)})
+- 수급(참고): 외인5일 ${r.f5 != null ? Math.round(r.f5) + '억' : '미입력'}, 기관5일 ${r.i5 != null ? Math.round(r.i5) + '억' : '미입력'}
 
-[평등락률 — 가속도]
-- 코스피: 5일 ${fmtPct(r.k_accel5)}, 10일 ${fmtPct(r.k_accel10)}, 20일 ${fmtPct(r.k_accel20)}
-- 레버리지: 5일 ${fmtPct(r.l_accel5)}, 10일 ${fmtPct(r.l_accel10)}, 20일 ${fmtPct(r.l_accel20)}
-- 나스닥: 5일 ${fmtPct(r.n_accel5)}, 10일 ${fmtPct(r.n_accel10)}, 20일 ${fmtPct(r.n_accel20)}
-- VIX: 5일 ${fmtPct(r.v_accel5)}, 10일 ${fmtPct(r.v_accel10)}, 20일 ${fmtPct(r.v_accel20)}
+[평등락률 5일]
+- 레버리지: ${fmtPct(r.l_accel5)} (전일: ${fmtPct(r._prev_l_accel5)})
+- 코스피: ${fmtPct(r.k_accel5)}
 
 [GO/NO-GO 판정] ${r.goStatus}
 사유: ${r.goReasons.join(', ')}
 ${r.memo ? '메모: ' + r.memo : ''}
 
-다음 형식으로 300자 내외 한국어로 브리핑해주세요:
-1. 📊 시장 환경 요약 (2~3문장)
-2. ⚡ 핵심 신호 (배열, 가속도, 수급 — 각 1줄)
-3. 🎯 오늘의 판단: GO/NO-GO 및 이유
-4. 💡 주의사항 또는 트레이더 한마디`;
+다음 형식으로 정확히 브리핑해주세요. 확증편향을 방지하기 위해 "진입근거: 없음"을 반드시 명시해야 합니다:
+1. 🎯 판정: GO/CAUTION/NO-GO + 사유
+2. 📍 추세: 배열 + 모멘텀 국면 해석 (1문장)
+3. ⚡ 핵심: 평등락률 수치 + 전일대비 방향
+4. 🚦 진입근거: 있음/없음 — 구체적 이유 (없으면 반드시 "없음"이라고 써주세요)
+5. ⚠️ 주의: 경계값 근접 여부, 주의사항`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1168,23 +1263,106 @@ ${r.memo ? '메모: ' + r.memo : ''}
 // Claude API 접근 불가 시 로컬에서 간이 브리핑 생성
 function generateLocalBriefing(r) {
   const lines = [];
-  lines.push('📊 시장 환경 요약 (' + r.date + ')');
-  lines.push('KOSPI ' + r.kospi.toLocaleString() + ' / 레버리지 ' + r.lever.toLocaleString() + ' / VIX ' + r.vix);
+
+  // ── 1. 판정 ──
+  const statusEmoji = r.goStatus === 'GO' ? '✅' : r.goStatus === 'NOGO' ? '🛑' : '⚠️';
+  lines.push('🎯 판정: ' + statusEmoji + ' ' + r.goStatus);
+  lines.push('사유: ' + r.goReasons.join(' / '));
   lines.push('');
 
-  lines.push('⚡ 핵심 신호');
-  lines.push('• 배열: KOSPI ' + (r.kospiAlign || '-') + ', 레버리지 ' + (r.leverAlign || '-') + ', 나스닥 ' + (r.nasqAlign || '-'));
-  lines.push('• 가속도(5일): KOSPI ' + fmtPct(r.k_accel5) + ', 레버 ' + fmtPct(r.l_accel5) + ', VIX ' + fmtPct(r.v_accel5));
-  if (r.f5 != null || r.i5 != null) {
-    lines.push('• 수급: 외인5일 ' + (r.f5 != null ? Math.round(r.f5) + '억' : '-') + ', 기관5일 ' + (r.i5 != null ? Math.round(r.i5) + '억' : '-'));
+  // ── 2. 추세 국면 해석 ──
+  let trend = '';
+  const leverIsUp = r.leverAlign === '정배열';
+  const leverIsDown = r.leverAlign === '역배열';
+  const accel5 = r.l_accel5;
+  const accel5Positive = accel5 != null && accel5 > 0;
+  const accel5Negative = accel5 != null && accel5 < 0;
+
+  // 전일대비 방향 판단 (lastResult에서 이전 데이터 없으므로 10일과 비교로 대체)
+  const accel10 = r.l_accel10;
+
+  if (leverIsUp && accel5Positive) {
+    if (accel10 != null && accel5 > accel10) trend = '상승 추세 가속 중';
+    else trend = '상승 추세 유지, 모멘텀 안정';
+  } else if (leverIsUp && accel5Negative) {
+    trend = '정배열이나 모멘텀 둔화 — 추세 전환 주시';
+  } else if (leverIsDown && accel5Negative) {
+    trend = '하락 추세 지속 — 매수 환경 아님';
+  } else if (leverIsDown && accel5Positive) {
+    trend = '역배열이나 반등 조짐 — 확인 필요';
+  } else if (r.leverAlign === '혼조') {
+    if (accel5Positive) trend = '혼조 속 회복 시도 중';
+    else if (accel5Negative) trend = '혼조 속 하락 압력 지속';
+    else trend = '방향성 불명확 — 관망';
+  } else {
+    trend = '데이터 부족';
+  }
+  lines.push('📍 추세: 레버리지 ' + (r.leverAlign || '-') + ' / ' + trend);
+  lines.push('');
+
+  // ── 3. 핵심 수치 ──
+  let accelDesc = '레버리지 평등락률 5일 ' + fmtPct(accel5);
+  if (accel5 != null) {
+    accelDesc += accel5 > 0 ? ' (양수' : ' (음수';
+    // 전일대비 방향 표시
+    const prevAccel5 = r._prev_l_accel5;
+    if (prevAccel5 != null) {
+      accelDesc += accel5 > prevAccel5 ? ', 개선 중)' : ', 악화 중)';
+    } else {
+      accelDesc += ')';
+    }
+  }
+  lines.push('⚡ 핵심: ' + accelDesc);
+  lines.push('');
+
+  // ── 4. 진입근거 판단 ──
+  let entryBasis = '';
+  let hasEntry = false;
+
+  if (r.goStatus === 'NOGO') {
+    entryBasis = '없음 — 매매 금지 환경 (VIX ≥ 25)';
+  } else if (leverIsDown) {
+    entryBasis = '없음 — 레버리지 역배열, 상승추세 부재';
+  } else if (accel5Negative) {
+    entryBasis = '없음 — 평등락률 음수, 모멘텀 미확인. 양수 전환 대기';
+  } else if (leverIsUp && accel5Positive) {
+    entryBasis = '있음 — 정배열 + 모멘텀 양수. 개별 종목 진입근거 확인 후 판단';
+    hasEntry = true;
+  } else if (r.leverAlign === '혼조' && accel5Positive) {
+    entryBasis = '약함 — 혼조 배열, 모멘텀은 양수. 신중한 접근 필요';
+  } else {
+    entryBasis = '불명확 — 추가 확인 필요';
+  }
+
+  const entryColor = hasEntry ? '🟢' : '🔴';
+  lines.push('🚦 진입근거: ' + entryColor + ' ' + entryBasis);
+  lines.push('');
+
+  // ── 5. 주의사항 ──
+  const warnings = [];
+  if (r.vix >= 20 && r.vix < 25) warnings.push('VIX ' + r.vix + ' → 25 돌파 시 NO-GO');
+  if (r.vix >= 23 && r.vix < 25) warnings.push('VIX 25 임박, 긴장 필요');
+  if (r.vix < 20 && r.vix >= 18) warnings.push('VIX ' + r.vix + ' → 20 근접, 모니터링');
+  if (accel5 != null && accel5 > 0 && accel5 < 0.1) warnings.push('평등락률 양수지만 미약 — 재역전 가능');
+  if (accel5 != null && accel5 < 0 && accel5 > -0.1) warnings.push('평등락률 양수 전환 임박 — 아직은 대기');
+  if (r.leverAlign === '혼조') warnings.push('배열 혼조 — 방향성 확인 전 소액만');
+
+  if (warnings.length > 0) {
+    lines.push('⚠️ 주의: ' + warnings.join(' / '));
+  } else {
+    lines.push('⚠️ 주의: 특이사항 없음');
   }
   lines.push('');
 
-  lines.push('🎯 판정: ' + r.goStatus);
-  lines.push('사유: ' + r.goReasons.join(', '));
-  lines.push('');
+  // ── 6. 참고: 수급 ──
+  if (r.f5 != null || r.i5 != null) {
+    const fStr = r.f5 != null ? (r.f5 > 0 ? '+' : '') + Math.round(r.f5) + '억' : '-';
+    const iStr = r.i5 != null ? (r.i5 > 0 ? '+' : '') + Math.round(r.i5) + '억' : '-';
+    lines.push('📋 참고(수급): 외인5일 ' + fStr + ', 기관5일 ' + iStr);
+  }
 
-  lines.push('💡 이 브리핑은 로컬 요약입니다. Claude AI 브리핑은 claude.ai 내에서 실행하면 이용 가능합니다.');
+  lines.push('');
+  lines.push('(' + r.date + ' 기준 로컬 브리핑)');
 
   return lines.join('\n');
 }
@@ -1274,7 +1452,7 @@ function downloadExcel() {
   }
 
   const dateStr = new Date().toISOString().split('T')[0];
-  XLSX.writeFile(wb, 'MA7310_자비스_' + dateStr + '.xlsx');
+  XLSX.writeFile(wb, 'MA7310_JARVIS_' + dateStr + '.xlsx');
   showToast('엑셀 다운로드 완료');
 }
 
