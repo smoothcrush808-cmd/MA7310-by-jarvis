@@ -452,17 +452,16 @@
 
     <div class="supply-grid">
       <div class="supply-card">
-        <div class="result-title" style="margin: -12px -14px 10px; font-size:10px;">코스피 수급 (억원)</div>
-        <div class="supply-row">
+        <div class="result-title" style="margin: -12px -14px 10px; font-size:10px;">코스피 수급 — 당일 (억원)</div>
+        <div class="supply-row" style="grid-template-columns: 80px 1fr;">
           <div class="supply-label">외국인</div>
           <input class="input-field" id="i_foreign" type="number" placeholder="당일">
-          <input class="input-field" id="i_foreign5" type="number" placeholder="5일 누적">
         </div>
-        <div class="supply-row">
+        <div class="supply-row" style="grid-template-columns: 80px 1fr;">
           <div class="supply-label">기관</div>
           <input class="input-field" id="i_inst" type="number" placeholder="당일">
-          <input class="input-field" id="i_inst5" type="number" placeholder="5일 누적">
         </div>
+        <div style="font-size:11px; color:var(--muted); margin-top:6px;">※ 5일 누적은 히스토리에서 자동 계산됩니다</div>
       </div>
       <div class="supply-card">
         <div class="result-title" style="margin: -12px -14px 10px; font-size:10px;">메모</div>
@@ -514,7 +513,7 @@
         <table id="dashVix"></table>
       </div>
       <div class="result-card full-result">
-        <div class="result-title">📊 STEP 2: KOSPI + 수급</div>
+        <div class="result-title">📊 STEP 2: 수급 (참고)</div>
         <table id="dashSupply"></table>
       </div>
       <div class="result-card full-result">
@@ -656,8 +655,6 @@ function runAnalysisFromHistory(entry) {
   document.getElementById('i_vix').value = entry.vix;
   document.getElementById('i_foreign').value = entry.f_day || '';
   document.getElementById('i_inst').value = entry.i_day || '';
-  document.getElementById('i_foreign5').value = entry.f5 || '';
-  document.getElementById('i_inst5').value = entry.i5 || '';
   document.getElementById('i_date').value = entry.date.replace(/\//g, '-');
   document.getElementById('i_memo').value = entry.memo || '';
 
@@ -670,8 +667,9 @@ function runAnalysisQuiet(entry) {
   const { date, kospi, lever, nasq, vix } = entry;
   const fDay = entry.f_day || 0;
   const iDay = entry.i_day || 0;
-  const f5 = entry.f5 || null;
-  const i5 = entry.i5 || null;
+  const supply5 = calcSupply5(date);
+  const f5 = supply5.f5;
+  const i5 = supply5.i5;
   const memo = entry.memo || '';
 
   const kospiPrices = allHistory.map(h => h.kospi).filter(v => v != null);
@@ -881,6 +879,19 @@ function calcMA(prices, n) {
 function pct(a, b) { return b ? ((a - b) / b * 100) : null; }
 function fmt(v, d = 2) { if (v == null) return '-'; return v.toFixed(d); }
 function fmtPct(v) { if (v == null) return '-'; return (v > 0 ? '+' : '') + v.toFixed(2) + '%'; }
+
+// 5일 누적 수급 자동 계산: 히스토리에서 최근 5일 당일 수급 합산
+function calcSupply5(targetDate) {
+  // targetDate 이하의 히스토리를 날짜순으로 가져와서 최근 5일 합산
+  const sorted = allHistory
+    .filter(h => h.date <= targetDate && h.f_day != null)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const recent5 = sorted.slice(-5);
+  if (recent5.length === 0) return { f5: null, i5: null };
+  const f5 = recent5.reduce((sum, h) => sum + (h.f_day || 0), 0);
+  const i5 = recent5.reduce((sum, h) => sum + (h.i_day || 0), 0);
+  return { f5, i5 };
+}
 function colClass(v) {
   if (v == null) return 'neutral';
   return v > 0 ? 'up' : v < 0 ? 'dn' : 'neutral';
@@ -958,8 +969,6 @@ function runAnalysis() {
   const vix = parseFloat(document.getElementById('i_vix').value);
   const fDay = parseFloat(document.getElementById('i_foreign').value) || 0;
   const iDay = parseFloat(document.getElementById('i_inst').value) || 0;
-  const f5 = parseFloat(document.getElementById('i_foreign5').value) || null;
-  const i5 = parseFloat(document.getElementById('i_inst5').value) || null;
   const dateVal = document.getElementById('i_date').value;
   const memo = document.getElementById('i_memo').value;
 
@@ -969,6 +978,11 @@ function runAnalysis() {
   }
 
   const todayStr = dateVal.replace(/-/g, '/');
+
+  // 5일 누적 자동 계산 (오늘 당일 포함, 이전 4일 + 오늘)
+  const prev4 = allHistory.filter(h => h.date < todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(-4);
+  const f5 = prev4.reduce((sum, h) => sum + (h.f_day || 0), 0) + fDay;
+  const i5 = prev4.reduce((sum, h) => sum + (h.i_day || 0), 0) + iDay;
 
   // 임시 히스토리 생성 (저장하지 않고 계산용으로만 사용)
   const tempHistory = [...allHistory];
@@ -1058,8 +1072,6 @@ function saveData() {
   const vix = parseFloat(document.getElementById('i_vix').value);
   const fDay = parseFloat(document.getElementById('i_foreign').value) || 0;
   const iDay = parseFloat(document.getElementById('i_inst').value) || 0;
-  const f5 = parseFloat(document.getElementById('i_foreign5').value) || null;
-  const i5 = parseFloat(document.getElementById('i_inst5').value) || null;
   const dateVal = document.getElementById('i_date').value;
   const memo = document.getElementById('i_memo').value;
 
@@ -1069,6 +1081,11 @@ function saveData() {
   }
 
   const todayStr = dateVal.replace(/-/g, '/');
+
+  // 5일 누적 자동 계산 (오늘 포함)
+  const prev4 = allHistory.filter(h => h.date < todayStr && h.date !== todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(-4);
+  const f5 = prev4.reduce((sum, h) => sum + (h.f_day || 0), 0) + fDay;
+  const i5 = prev4.reduce((sum, h) => sum + (h.i_day || 0), 0) + iDay;
   const newEntry = {
     date: todayStr, kospi, lever, nasq: nasq || null, vix: vix || null,
     f_day: fDay, i_day: iDay, f5, i5, memo
@@ -1115,39 +1132,46 @@ function renderResult(r) {
     '<tbody>' +
     '<tr><td class="row-label" style="font-size:14px;">VIX 현재</td>' +
       '<td style="font-size:22px;font-weight:700;" class="' + vixColor + '">' + fmt(r.vix) + '</td>' +
-      '<td class="' + colClass(r.vixChg) + '">전일비 ' + fmtPct(r.vixChg) + '</td>' +
-      '<td class="' + colClass(r.vixVs5MA) + '">vs5MA ' + fmtPct(r.vixVs5MA) + '</td></tr>' +
-    '<tr><td colspan="4" style="font-size:14px;font-weight:700;padding:8px 10px;" class="' + vixColor + '">' + vixLevel + '</td></tr>' +
-    '<tr><td colspan="4" style="padding:6px 10px;border-top:1px solid var(--border);">' +
-      '<div style="font-size:11px;color:var(--muted);line-height:1.8;">' +
-      '<span class="dn">■</span> 30↑ 극단적 공포 &nbsp;&nbsp;' +
-      '<span class="dn">■</span> 25~30 공포 &nbsp;&nbsp;' +
-      '<span class="warn">■</span> 20~25 불안 &nbsp;&nbsp;' +
-      '<span class="up">■</span> 15~20 평온 &nbsp;&nbsp;' +
-      '<span style="color:var(--accent)">■</span> 15↓ 안정' +
+      '<td class="' + colClass(r.vixChg) + '">전일비 ' + fmtPct(r.vixChg) + '</td></tr>' +
+    '<tr style="border-top:1px solid var(--border);"><td class="row-label">시장 상태</td>' +
+      '<td colspan="2" style="font-size:14px;font-weight:700;" class="' + vixColor + '">' + vixLevel + '</td></tr>' +
+    '<tr style="border-top:1px solid var(--border);"><td colspan="3" style="padding:8px 10px;">' +
+      '<div style="font-size:11px;color:var(--muted);line-height:2;">' +
+      '<span class="dn">■</span> 30↑ 극단적 공포 (매매 금지)<br>' +
+      '<span class="dn">■</span> 25~30 공포 → 🛑 NO-GO<br>' +
+      '<span class="warn">■</span> 20~25 불안 → ⚠️ CAUTION<br>' +
+      '<span class="up">■</span> 15~20 평온 (정상 범위)<br>' +
+      '<span style="color:var(--accent)">■</span> 15↓ 안정 (낙관적)' +
       '</div></td></tr>' +
     '</tbody>';
 
-  // STEP 2: KOSPI + 수급
+  // STEP 2: 수급 (참고)
   document.getElementById('dashSupply').innerHTML =
-    '<thead><tr><th>구분</th><th>수치</th><th colspan="2">상세</th></tr></thead>' +
+    '<thead><tr><th>구분</th><th>5일 누적</th><th>당일</th></tr></thead>' +
     '<tbody>' +
-    '<tr><td class="row-label">KOSPI</td>' +
-      '<td style="font-weight:700;">' + fmt(r.kospi) + '</td>' +
-      '<td class="' + colClass(r.kVs5) + '">vs5MA ' + fmtPct(r.kVs5) + '</td>' +
-      '<td class="' + colClass(r.kVs10) + '">vs10MA ' + fmtPct(r.kVs10) + '</td></tr>' +
-    '<tr><td class="row-label">배열</td>' +
-      '<td colspan="3" class="' + (r.kospiAlign === '정배열' ? 'up' : r.kospiAlign === '역배열' ? 'dn' : 'warn') + '" style="font-weight:700;">' + (r.kospiAlign || '-') + '</td></tr>' +
-    '<tr style="border-top:1px solid var(--border);"><td class="row-label">외국인 5일</td>' +
-      '<td class="' + colClass(r.f5) + '" style="font-weight:700;">' + (r.f5 != null ? (r.f5 > 0 ? '+' : '') + Math.round(r.f5) + '억' : '-') + '</td>' +
-      '<td colspan="2" style="color:var(--muted)">당일: ' + (r.fDay != null ? (r.fDay > 0 ? '+' : '') + Math.round(r.fDay) + '억' : '-') + '</td></tr>' +
-    '<tr><td class="row-label">기관 5일</td>' +
-      '<td class="' + colClass(r.i5) + '" style="font-weight:700;">' + (r.i5 != null ? (r.i5 > 0 ? '+' : '') + Math.round(r.i5) + '억' : '-') + '</td>' +
-      '<td colspan="2" style="color:var(--muted)">당일: ' + (r.iDay != null ? (r.iDay > 0 ? '+' : '') + Math.round(r.iDay) + '억' : '-') + '</td></tr>' +
+    '<tr><td class="row-label">외국인</td>' +
+      '<td class="' + colClass(r.f5) + '" style="font-weight:700;">' + (r.f5 != null ? (r.f5 > 0 ? '+' : '') + Math.round(r.f5).toLocaleString() + '억' : '-') + '</td>' +
+      '<td style="color:var(--muted)">' + (r.fDay != null ? (r.fDay > 0 ? '+' : '') + Math.round(r.fDay).toLocaleString() + '억' : '-') + '</td></tr>' +
+    '<tr><td class="row-label">기관</td>' +
+      '<td class="' + colClass(r.i5) + '" style="font-weight:700;">' + (r.i5 != null ? (r.i5 > 0 ? '+' : '') + Math.round(r.i5).toLocaleString() + '억' : '-') + '</td>' +
+      '<td style="color:var(--muted)">' + (r.iDay != null ? (r.iDay > 0 ? '+' : '') + Math.round(r.iDay).toLocaleString() + '억' : '-') + '</td></tr>' +
+    '<tr style="border-top:1px solid var(--border);"><td colspan="3" style="padding:6px 10px;font-size:11px;color:var(--muted);">※ 수급은 GO/NO-GO 판정에 미반영, 참고용</td></tr>' +
     '</tbody>';
 
   // STEP 3: 레버리지
+  // 전일 레버리지 가격 (히스토리에서)
+  const leverHistory = allHistory.filter(h => h.lever != null && h.date <= r.date).sort((a, b) => a.date.localeCompare(b.date));
+  const prevLever = leverHistory.length >= 2 ? leverHistory[leverHistory.length - 2].lever : null;
+  const leverDayChg = prevLever ? (r.lever - prevLever) : null;
+  const leverDayPct = prevLever ? ((r.lever - prevLever) / prevLever * 100) : null;
+
   document.getElementById('dashTable2').innerHTML =
+    '<tbody>' +
+    '<tr><td class="row-label" style="font-size:14px;">레버리지 종가</td>' +
+      '<td style="font-size:20px;font-weight:700;">' + r.lever.toLocaleString() + '</td>' +
+      '<td class="' + colClass(leverDayChg) + '">' + (leverDayChg != null ? (leverDayChg > 0 ? '▲' : leverDayChg < 0 ? '▼' : '-') + ' ' + Math.abs(leverDayChg).toLocaleString() : '-') + '</td>' +
+      '<td class="' + colClass(leverDayPct) + '">' + (leverDayPct != null ? fmtPct(leverDayPct) : '-') + '</td></tr>' +
+    '</tbody>' +
     '<thead><tr><th>구분</th><th>5MA</th><th>10MA</th><th>20MA</th></tr></thead>' +
     '<tbody>' +
     '<tr><td class="row-label">레버리지 평잔</td>' +
@@ -1156,8 +1180,8 @@ function renderResult(r) {
       '<td class="' + colClass(r.lVs5) + '">' + fmtPct(r.lVs5) + '</td>' +
       '<td class="' + colClass(r.lVs10) + '">' + fmtPct(r.lVs10) + '</td>' +
       '<td class="' + colClass(r.lVs20) + '">' + fmtPct(r.lVs20) + '</td></tr>' +
-    '<tr><td class="row-label">배열</td>' +
-      '<td colspan="3" class="' + (r.leverAlign === '정배열' ? 'up' : r.leverAlign === '역배열' ? 'dn' : 'warn') + '">' + (r.leverAlign || '-') + '</td></tr>' +
+    '<tr style="border-top:1px solid var(--border);"><td class="row-label">배열</td>' +
+      '<td colspan="3" class="' + (r.leverAlign === '정배열' ? 'up' : r.leverAlign === '역배열' ? 'dn' : 'warn') + '" style="font-weight:700;">' + (r.leverAlign || '-') + '</td></tr>' +
     '</tbody>';
 
   // 변동폭 (정규화) 표시
@@ -1379,8 +1403,6 @@ function onHistoryClick(dateStr) {
   document.getElementById('i_vix').value = entry.vix || '';
   document.getElementById('i_foreign').value = entry.f_day || '';
   document.getElementById('i_inst').value = entry.i_day || '';
-  document.getElementById('i_foreign5').value = entry.f5 || '';
-  document.getElementById('i_inst5').value = entry.i5 || '';
   document.getElementById('i_date').value = dateStr.replace(/\//g, '-');
   document.getElementById('i_memo').value = entry.memo || '';
   // 분석 실행
