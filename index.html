@@ -590,8 +590,10 @@ function loadState() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const userData = JSON.parse(saved);
-      // 유저 추가 데이터를 V5 히스토리에 병합
+      // 이전 버전 호환: f5/i5 필드 제거 (자동계산으로 전환됨)
       userData.forEach(entry => {
+        delete entry.f5;
+        delete entry.i5;
         const idx = allHistory.findIndex(h => h.date === entry.date);
         if (idx >= 0) allHistory[idx] = entry;
         else allHistory.push(entry);
@@ -604,18 +606,30 @@ function loadState() {
 }
 
 function saveUserData() {
-  // V5에 없는 날짜의 데이터만 저장 (또는 V5를 덮어쓴 수정 데이터)
-  const v5Dates = new Set(V5_HISTORY.map(h => h.date));
+  // V5에 없는 날짜 또는 핵심 값이 변경된 데이터만 localStorage에 저장
+  const v5Map = {};
+  V5_HISTORY.forEach(h => { v5Map[h.date] = h; });
+
   const userData = allHistory.filter(h => {
-    if (!v5Dates.has(h.date)) return true;
-    // V5에 있는 날짜도 값이 변경됐으면 저장
-    const orig = V5_HISTORY.find(o => o.date === h.date);
-    return JSON.stringify(h) !== JSON.stringify(orig);
+    if (!v5Map[h.date]) return true; // V5에 없는 날짜 → 저장
+    const orig = v5Map[h.date];
+    // 핵심 필드만 비교 (f5/i5는 자동계산이므로 비교 제외)
+    return h.kospi !== orig.kospi || h.lever !== orig.lever ||
+           h.nasq !== orig.nasq || h.vix !== orig.vix ||
+           h.f_day !== orig.f_day || h.i_day !== orig.i_day ||
+           (h.memo || '') !== (orig.memo || '');
   });
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
   } catch (e) {
     console.warn('데이터 저장 실패:', e);
+    // 용량 초과 시 V5 중복 데이터 제거 후 재시도
+    const essential = userData.filter(h => !v5Map[h.date]);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(essential));
+    } catch (e2) {
+      alert('저장 공간이 부족합니다. 🗑 초기화 후 다시 시도해주세요.');
+    }
   }
 }
 
@@ -1089,13 +1103,9 @@ function saveData() {
 
   const todayStr = dateVal.replace(/-/g, '/');
 
-  // 5일 누적 자동 계산 (오늘 포함)
-  const prev4 = allHistory.filter(h => h.date < todayStr && h.date !== todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(-4);
-  const f5 = prev4.reduce((sum, h) => sum + (h.f_day || 0), 0) + fDay;
-  const i5 = prev4.reduce((sum, h) => sum + (h.i_day || 0), 0) + iDay;
   const newEntry = {
     date: todayStr, kospi, lever, nasq: nasq || null, vix: vix || null,
-    f_day: fDay, i_day: iDay, f5, i5, memo
+    f_day: fDay, i_day: iDay, memo
   };
 
   const existIdx = allHistory.findIndex(h => h.date === todayStr);
@@ -1418,24 +1428,39 @@ function onHistoryClick(dateStr) {
 
 function renderHistory() {
   const tbody = document.getElementById('histBody');
-  const sorted = [...allHistory].reverse();
+  const sorted = [...allHistory].sort((a, b) => a.date.localeCompare(b.date));
   document.getElementById('histCount').textContent = sorted.length;
 
-  tbody.innerHTML = sorted.map(h => {
+  // 5일 누적 계산 (각 날짜별)
+  const f5Map = {}, i5Map = {};
+  for (let i = 0; i < sorted.length; i++) {
+    const start = Math.max(0, i - 4);
+    let fSum = 0, iSum = 0;
+    for (let j = start; j <= i; j++) {
+      fSum += (sorted[j].f_day || 0);
+      iSum += (sorted[j].i_day || 0);
+    }
+    f5Map[sorted[i].date] = fSum;
+    i5Map[sorted[i].date] = iSum;
+  }
+
+  const reversed = [...sorted].reverse();
+  tbody.innerHTML = reversed.map(h => {
     let go = 'GO';
     if (h.vix && h.vix >= 25) go = 'NOGO';
     else if (h.vix && h.vix >= 20) go = 'CAUTION';
 
+    const f5 = f5Map[h.date] || 0;
+    const i5 = i5Map[h.date] || 0;
     const goColor = go === 'GO' ? 'var(--up)' : go === 'NOGO' ? 'var(--dn)' : 'var(--warn)';
-    // [FIX #5] onclick 핸들러 추가
     return '<tr class="history-row-clickable" onclick="onHistoryClick(\'' + h.date + '\')">' +
       '<td>' + h.date + '</td>' +
       '<td>' + (h.kospi != null ? h.kospi.toLocaleString() : '-') + '</td>' +
       '<td>' + (h.lever != null ? h.lever.toLocaleString() : '-') + '</td>' +
       '<td>' + (h.nasq != null ? h.nasq.toLocaleString() : '-') + '</td>' +
       '<td class="' + (h.vix >= 25 ? 'dn' : h.vix >= 20 ? 'warn' : 'up') + '">' + (h.vix != null ? h.vix : '-') + '</td>' +
-      '<td class="' + (h.f5 > 0 ? 'up' : h.f5 < 0 ? 'dn' : 'neutral') + '">' + (h.f5 != null ? (h.f5 > 0 ? '+' : '') + Math.round(h.f5) + '억' : '-') + '</td>' +
-      '<td class="' + (h.i5 > 0 ? 'up' : h.i5 < 0 ? 'dn' : 'neutral') + '">' + (h.i5 != null ? (h.i5 > 0 ? '+' : '') + Math.round(h.i5) + '억' : '-') + '</td>' +
+      '<td class="' + (f5 > 0 ? 'up' : f5 < 0 ? 'dn' : 'neutral') + '">' + (f5 > 0 ? '+' : '') + Math.round(f5).toLocaleString() + '억</td>' +
+      '<td class="' + (i5 > 0 ? 'up' : i5 < 0 ? 'dn' : 'neutral') + '">' + (i5 > 0 ? '+' : '') + Math.round(i5).toLocaleString() + '억</td>' +
       '<td style="color:' + goColor + ';font-weight:700;">' + go + '</td>' +
     '</tr>';
   }).join('');
@@ -1445,10 +1470,16 @@ function renderHistory() {
 function downloadExcel() {
   const wb = XLSX.utils.book_new();
 
-  // 히스토리 시트
+  // 히스토리 시트 (f5/i5 자동계산)
+  const sortedHist = [...allHistory].sort((a, b) => a.date.localeCompare(b.date));
   const histData = [
     ['날짜', 'KOSPI', '레버리지', '나스닥', 'VIX', '외국인(당일)', '기관(당일)', '외인5일', '기관5일', '메모'],
-    ...allHistory.map(h => [h.date, h.kospi, h.lever, h.nasq, h.vix, h.f_day, h.i_day, h.f5, h.i5, h.memo || ''])
+    ...sortedHist.map((h, i) => {
+      const start = Math.max(0, i - 4);
+      let f5 = 0, i5 = 0;
+      for (let j = start; j <= i; j++) { f5 += (sortedHist[j].f_day || 0); i5 += (sortedHist[j].i_day || 0); }
+      return [h.date, h.kospi, h.lever, h.nasq, h.vix, h.f_day, h.i_day, f5, i5, h.memo || ''];
+    })
   ];
   const ws1 = XLSX.utils.aoa_to_sheet(histData);
   XLSX.utils.book_append_sheet(wb, ws1, '전체히스토리');
