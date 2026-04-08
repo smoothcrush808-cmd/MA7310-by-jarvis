@@ -423,7 +423,7 @@
   <!-- INPUT TAB -->
   <div class="section" id="tab-input">
     <div style="margin-bottom:10px; color:var(--muted); font-size:11px;">
-      ※ 나스닥·VIX는 자동조회 시도. 코스피·레버리지·수급은 영웅문4에서 입력.
+      ※ 모든 데이터는 영웅문4 등에서 확인 후 직접 입력해주세요.
     </div>
     <div class="input-grid">
       <div class="input-card">
@@ -436,13 +436,11 @@
       </div>
       <div class="input-card">
         <div class="input-label">나스닥 종가</div>
-        <input class="input-field" id="i_nasq" type="number" step="0.01" placeholder="자동조회">
-        <div class="input-auto" id="nasq_status">⏳ 대기 중</div>
+        <input class="input-field" id="i_nasq" type="number" step="0.01" placeholder="ex) 21800.00">
       </div>
       <div class="input-card">
         <div class="input-label">VIX</div>
-        <input class="input-field" id="i_vix" type="number" step="0.01" placeholder="자동조회">
-        <div class="input-auto" id="vix_status">⏳ 대기 중</div>
+        <input class="input-field" id="i_vix" type="number" step="0.01" placeholder="ex) 22.37">
       </div>
       <div class="input-card">
         <div class="input-label">입력 날짜</div>
@@ -472,7 +470,6 @@
     <div class="btn-row">
       <button class="btn btn-primary" onclick="runAnalysis()">⚡ 분석 실행</button>
       <button class="btn btn-success" onclick="saveData()">💾 데이터 저장</button>
-      <button class="btn btn-secondary" onclick="autoFetch(true)">🌐 시장 데이터 재조회</button>
       <button class="btn btn-secondary" onclick="loadLastData()">↩️ 전일 데이터 불러오기</button>
       <button class="btn btn-danger" onclick="clearUserData()" style="margin-left:auto;padding:6px 14px;font-size:12px;">🗑 초기화</button>
     </div>
@@ -650,7 +647,6 @@ window.onload = () => {
   document.getElementById('headerDate').textContent =
     today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   renderHistory();
-  autoFetch();
 
   // 히스토리에 데이터가 있으면 마지막 날짜 기준 자동 분석
   if (allHistory.length > 0) {
@@ -776,105 +772,6 @@ function showToast(msg, duration = 2500) {
   el.textContent = msg;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), duration);
-}
-
-// ── 6. AUTO FETCH (무료 금융 API) ──────────────────────────────
-// 전략: Alpha Vantage (무료, CORS 허용) → Yahoo Finance (CORS 프록시) → 수동 입력
-// Alpha Vantage 무료 키: https://www.alphavantage.co/support/#api-key 에서 발급
-const ALPHA_VANTAGE_KEY = 'XKM3J6R4940SLH6R';
-
-async function autoFetch(force = false) {
-  document.getElementById('nasq_status').textContent = '🔄 조회 중...';
-  document.getElementById('vix_status').textContent = '🔄 조회 중...';
-
-  // 나스닥과 VIX를 병렬로 조회
-  const [nasqResult, vixResult] = await Promise.allSettled([
-    fetchNasdaq(),
-    fetchVix()
-  ]);
-
-  if (nasqResult.status === 'fulfilled' && nasqResult.value) {
-    const nasqField = document.getElementById('i_nasq');
-    if (force || !nasqField.value || nasqField.value === '') {
-      nasqField.value = nasqResult.value;
-    }
-    document.getElementById('nasq_status').textContent = '✅ 자동조회 완료 (' + nasqResult.value + ')';
-  } else {
-    document.getElementById('nasq_status').textContent = '⚠️ 직접 입력 필요';
-  }
-
-  if (vixResult.status === 'fulfilled' && vixResult.value) {
-    const vixField = document.getElementById('i_vix');
-    if (force || !vixField.value || vixField.value === '') {
-      vixField.value = vixResult.value;
-    }
-    document.getElementById('vix_status').textContent = '✅ 자동조회 완료 (' + vixResult.value + ')';
-  } else {
-    document.getElementById('vix_status').textContent = '⚠️ 직접 입력 필요';
-  }
-}
-
-async function fetchNasdaq() {
-  // 1차: Alpha Vantage — IXIC (NASDAQ Composite)
-  try {
-    const url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=IXIC&apikey=' + ALPHA_VANTAGE_KEY;
-    const res = await fetch(url);
-    const data = await res.json();
-    const price = parseFloat(data?.['Global Quote']?.['05. price']);
-    if (price > 0) return price;
-  } catch (e) { console.warn('Alpha Vantage NASDAQ 실패:', e); }
-
-  // 2차: Yahoo Finance via allorigins 프록시
-  try {
-    const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?range=1d&interval=1d';
-    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooUrl);
-    const res = await fetch(proxyUrl);
-    const data = await res.json();
-    const close = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (close > 0) return parseFloat(close.toFixed(2));
-  } catch (e) { console.warn('Yahoo NASDAQ 실패:', e); }
-
-  // 3차: Finnhub (무료, CORS 허용)
-  try {
-    const url = 'https://finnhub.io/api/v1/quote?symbol=QQQ&token=demo';
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data?.c > 0) return data.c; // QQQ 종가 (나스닥 대용)
-  } catch (e) { console.warn('Finnhub QQQ 실패:', e); }
-
-  return null;
-}
-
-async function fetchVix() {
-  // 1차: Alpha Vantage — VIX (CBOE Volatility Index)
-  try {
-    const url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=VIX&apikey=' + ALPHA_VANTAGE_KEY;
-    const res = await fetch(url);
-    const data = await res.json();
-    const price = parseFloat(data?.['Global Quote']?.['05. price']);
-    if (price > 0) return price;
-  } catch (e) { console.warn('Alpha Vantage VIX 실패:', e); }
-
-  // 2차: Yahoo Finance via allorigins 프록시
-  try {
-    const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?range=1d&interval=1d';
-    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooUrl);
-    const res = await fetch(proxyUrl);
-    const data = await res.json();
-    const close = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    if (close > 0) return parseFloat(close.toFixed(2));
-  } catch (e) { console.warn('Yahoo VIX 실패:', e); }
-
-  // 3차: VIXY ETF via Alpha Vantage (VIX 대용)
-  try {
-    const url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=VIXY&apikey=' + ALPHA_VANTAGE_KEY;
-    const res = await fetch(url);
-    const data = await res.json();
-    const price = parseFloat(data?.['Global Quote']?.['05. price']);
-    if (price > 0) return price; // VIXY는 VIX와 다르지만 참고용
-  } catch (e) { console.warn('Alpha Vantage VIXY 실패:', e); }
-
-  return null;
 }
 
 // ── 7. LOAD LAST DATA ─────────────────────────────────────────
