@@ -1518,10 +1518,10 @@ function parseV5Excel(workbook) {
       const date = normalizeDate(row[0]);
       if (!date) continue;
       map[date] = {
-        f_day: row[2] != null ? parseFloat(row[2]) : 0,  // C열: 외국인
-        i_day: row[3] != null ? parseFloat(row[3]) : 0,  // D열: 기관계
-        f5: row[4] != null ? parseFloat(row[4]) : null,   // E열: 외인5일
-        i5: row[5] != null ? parseFloat(row[5]) : null,   // F열: 기관5일
+        f_day: (row[2] != null && !isNaN(parseFloat(row[2]))) ? parseFloat(row[2]) : 0,  // C열: 외국인
+        i_day: (row[3] != null && !isNaN(parseFloat(row[3]))) ? parseFloat(row[3]) : 0,  // D열: 기관계
+        f5: null,   // E열: 외인5일 → 자동계산으로 전환 (업로드값 무시)
+        i5: null,   // F열: 기관5일 → 자동계산으로 전환 (업로드값 무시)
       };
     }
     return map;
@@ -1678,8 +1678,8 @@ function parseUploadData(rows) {
     // 기본값 채우기
     if (entry.f_day == null) entry.f_day = 0;
     if (entry.i_day == null) entry.i_day = 0;
-    if (entry.f5 === undefined) entry.f5 = null;
-    if (entry.i5 === undefined) entry.i5 = null;
+    if (entry.f5 === undefined || isNaN(entry.f5)) entry.f5 = null;
+    if (entry.i5 === undefined || isNaN(entry.i5)) entry.i5 = null;
     if (!entry.memo) entry.memo = '';
 
     parsed.push(entry);
@@ -1722,6 +1722,31 @@ function showUploadPreview(data, newCount, updateCount, errors) {
   const showData = data.slice(0, 20);
   const existingDates = new Set(allHistory.map(h => h.date));
 
+  // 미리보기용: 기존 히스토리 + 업로드 데이터를 합쳐서 f5/i5 자동 계산
+  const combined = [...allHistory];
+  data.forEach(entry => {
+    const idx = combined.findIndex(h => h.date === entry.date);
+    if (idx >= 0) {
+      combined[idx] = { ...combined[idx], ...entry };
+    } else {
+      combined.push({ ...entry });
+    }
+  });
+  combined.sort((a, b) => a.date.localeCompare(b.date));
+
+  // 5일 누적 계산 맵
+  const f5Map = {}, i5Map = {};
+  for (let i = 0; i < combined.length; i++) {
+    const start = Math.max(0, i - 4);
+    let fSum = 0, iSum = 0;
+    for (let j = start; j <= i; j++) {
+      fSum += (combined[j].f_day || 0);
+      iSum += (combined[j].i_day || 0);
+    }
+    f5Map[combined[i].date] = fSum;
+    i5Map[combined[i].date] = iSum;
+  }
+
   table.innerHTML =
     '<thead><tr><th>상태</th><th>날짜</th><th>KOSPI</th><th>레버리지</th><th>나스닥</th><th>VIX</th><th>외인(일)</th><th>기관(일)</th><th>외인5일</th><th>기관5일</th></tr></thead>' +
     '<tbody>' +
@@ -1730,6 +1755,8 @@ function showUploadPreview(data, newCount, updateCount, errors) {
       const badge = isNew
         ? '<span style="color:var(--up);font-weight:700;">NEW</span>'
         : '<span style="color:var(--warn);font-weight:700;">UPD</span>';
+      const f5 = f5Map[d.date] || 0;
+      const i5 = i5Map[d.date] || 0;
       return '<tr>' +
         '<td>' + badge + '</td>' +
         '<td>' + d.date + '</td>' +
@@ -1739,8 +1766,8 @@ function showUploadPreview(data, newCount, updateCount, errors) {
         '<td>' + (d.vix != null ? d.vix : '-') + '</td>' +
         '<td>' + (d.f_day || '-') + '</td>' +
         '<td>' + (d.i_day || '-') + '</td>' +
-        '<td>' + (d.f5 != null ? d.f5 : '-') + '</td>' +
-        '<td>' + (d.i5 != null ? d.i5 : '-') + '</td>' +
+        '<td class="' + (f5 > 0 ? 'up' : f5 < 0 ? 'dn' : 'neutral') + '">' + (f5 > 0 ? '+' : '') + Math.round(f5).toLocaleString() + '</td>' +
+        '<td class="' + (i5 > 0 ? 'up' : i5 < 0 ? 'dn' : 'neutral') + '">' + (i5 > 0 ? '+' : '') + Math.round(i5).toLocaleString() + '</td>' +
       '</tr>';
     }).join('') +
     (data.length > 20 ? '<tr><td colspan="10" style="color:var(--muted);text-align:center;">... 외 ' + (data.length - 20) + '건 더</td></tr>' : '') +
@@ -1757,6 +1784,8 @@ function confirmUpload() {
   if (pendingUploadData.length >= allHistory.length * 0.8) {
     // 전체 교체 모드
     allHistory = [...pendingUploadData];
+    // f5/i5는 자동계산이므로 저장값 제거
+    allHistory.forEach(h => { delete h.f5; delete h.i5; });
     allHistory.sort((a, b) => a.date.localeCompare(b.date));
     saveUserData();
     renderHistory();
@@ -1777,8 +1806,9 @@ function confirmUpload() {
         if (entry.vix != null) merged.vix = entry.vix;
         if (entry.f_day != null) merged.f_day = entry.f_day;
         if (entry.i_day != null) merged.i_day = entry.i_day;
-        if (entry.f5 != null) merged.f5 = entry.f5;
-        if (entry.i5 != null) merged.i5 = entry.i5;
+        // f5/i5는 자동계산이므로 저장하지 않음
+        delete merged.f5;
+        delete merged.i5;
         allHistory[idx] = merged;
         updateCount++;
       } else {
