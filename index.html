@@ -297,6 +297,76 @@
   }
   .toast.show { opacity: 1; }
 
+  /* GOOGLE SHEETS SYNC CARD */
+  .gsheet-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .gsheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(0,119,204,0.06) 0%, rgba(91,74,191,0.06) 100%);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .gsheet-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--accent);
+  }
+  .gsheet-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .gsheet-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #c7cbd3;
+    display: inline-block;
+    transition: background 0.3s;
+  }
+  .gsheet-dot.ok { background: var(--up); box-shadow: 0 0 6px rgba(10,143,79,0.5); }
+  .gsheet-dot.syncing { background: var(--warn); animation: gsheet-pulse 1s infinite; }
+  .gsheet-dot.error { background: var(--dn); }
+  @keyframes gsheet-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  .gsheet-body { padding: 12px 14px; }
+  .gsheet-note {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .gsheet-btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .gsheet-warn-banner {
+    background: rgba(192,123,0,0.1);
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .gsheet-warn-banner.show { display: block; }
+
   /* UPLOAD AREA */
   .upload-area {
     background: var(--card);
@@ -418,6 +488,27 @@
         </p>
       </div>
     </div>
+
+    <div class="result-card" style="margin-bottom:14px;">
+      <div class="result-title">☁️ 구글 시트 동기화 설정 (최초 1회)</div>
+      <div style="padding:16px; line-height:1.8; font-size:13px;">
+        <p style="margin-bottom:10px; color:var(--text);">
+          PC에서 수정한 데이터를 폰에서도 보려면, 엑셀을 <strong>구글 시트</strong>로 옮기고 한 번만 연결하면 됩니다. 이후엔 구글 시트에서 값만 수정하면 PC/폰 어디서나 <strong>🔄 구글 시트에서 불러오기</strong> 버튼으로 동일한 데이터를 볼 수 있습니다.
+        </p>
+        <ol style="margin:10px 0 10px 22px; padding:0;">
+          <li style="margin-bottom:8px;"><strong>MA7310_PJ_V5.xlsx</strong>를 구글 드라이브에 업로드 → 우클릭 → "Google 스프레드시트로 열기" (시트 구조 그대로 유지)</li>
+          <li style="margin-bottom:8px;">생긴 구글 시트 주소창에서 시트 ID 복사:<br>
+            <code style="background:var(--bg3); padding:2px 6px; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:11px;">docs.google.com/spreadsheets/d/<strong style="color:var(--accent);">「여기가 ID」</strong>/edit</code>
+          </li>
+          <li style="margin-bottom:8px;">구글 시트 오른쪽 위 "공유" → "링크가 있는 모든 사용자 — 뷰어" 로 설정 (수정은 본인 구글 계정에서만 가능)</li>
+          <li style="margin-bottom:8px;"><strong>index.html</strong> 상단의 <code style="background:var(--bg3); padding:2px 6px; border-radius:3px; font-family:'JetBrains Mono',monospace; font-size:11px;">const GOOGLE_SHEET_ID = '';</code> 의 따옴표 안에 복사한 ID를 붙여넣기 → GitHub Desktop으로 커밋/푸시</li>
+          <li style="margin-bottom:0;">이후엔 데이터입력 탭의 <strong>🔄 구글 시트에서 불러오기</strong> 버튼만 누르면 최신 데이터 반영</li>
+        </ol>
+        <p style="margin-top:12px; padding:8px 12px; background:rgba(0,119,204,0.06); border-radius:6px; font-size:12px; color:var(--muted);">
+          🔒 안전성: 시트는 "뷰어"로만 공개되므로 타인이 수정할 수 없음. 앱도 읽기 전용. 수정은 본인의 구글 계정에서만.
+        </p>
+      </div>
+    </div>
   </div>
 
   <!-- INPUT TAB -->
@@ -474,6 +565,27 @@
       <button class="btn btn-danger" onclick="clearUserData()" style="margin-left:auto;padding:6px 14px;font-size:12px;">🗑 초기화</button>
     </div>
 
+    <!-- GOOGLE SHEETS SYNC -->
+    <div class="gsheet-card" id="gsheetCard">
+      <div class="gsheet-header">
+        <div class="gsheet-title">☁️ 구글 시트 동기화</div>
+        <div class="gsheet-status" id="gsheetStatus">
+          <span class="gsheet-dot" id="gsheetDot"></span>
+          <span id="gsheetStatusText">마지막 동기화: -</span>
+        </div>
+      </div>
+      <div class="gsheet-body">
+        <div class="gsheet-note" id="gsheetNote">
+          엑셀을 구글 시트에 업로드해 두면, PC/폰 어디서든 이 버튼으로 최신 데이터를 불러올 수 있습니다.<br>
+          <span style="font-size:11px; color:var(--muted);">※ 시트 수정은 구글 시트 앱에서, 앱은 <strong>읽기 전용</strong>으로 동작합니다.</span>
+        </div>
+        <div class="gsheet-btn-row">
+          <button class="btn btn-primary" onclick="syncFromGoogleSheet()" id="gsheetSyncBtn">🔄 구글 시트에서 불러오기</button>
+          <button class="btn btn-secondary" onclick="openGoogleSheet()" id="gsheetOpenBtn">📋 시트 열기</button>
+        </div>
+      </div>
+    </div>
+
     <!-- EXCEL BULK UPLOAD -->
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()"
          ondragover="event.preventDefault(); this.classList.add('dragover')"
@@ -482,7 +594,7 @@
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
       <div class="upload-icon">📂</div>
       <div class="upload-text">
-        <strong>엑셀/CSV 일괄 업로드</strong><br>
+        <strong>엑셀/CSV 일괄 업로드</strong> (로컬 파일)<br>
         클릭하거나 파일을 드래그해서 놓으세요 (.xlsx, .csv)<br>
         필수 컬럼: 날짜, KOSPI, 레버리지, 나스닥, VIX<br>
         선택 컬럼: 외국인(당일), 기관(당일), 외인5일, 기관5일
@@ -503,6 +615,7 @@
 
   <!-- RESULT TAB -->
   <div class="section" id="tab-result">
+    <div class="gsheet-warn-banner" id="gsheetWarnBanner">⚠️ 구글 시트 연결 실패 — 로컬 캐시 기준 표시 중</div>
     <div class="signal-row" id="signalRow"></div>
     <div class="result-grid" style="grid-template-columns: 1fr;">
       <div class="result-card full-result">
@@ -572,6 +685,169 @@
 // ══════════════════════════════════════════════════════════════
 // JARVIS MA7310 — v2 (Bug-fixed & Enhanced)
 // ══════════════════════════════════════════════════════════════
+
+// ── 0. GOOGLE SHEETS CONFIG ──────────────────────────────────
+// ▼▼▼ 여기에 본인의 구글 시트 URL을 붙여넣으세요 ▼▼▼
+//
+// 설정 방법:
+// 1) MA7310_PJ_V5.xlsx를 구글 드라이브에 업로드 → "구글 스프레드시트로 열기"로 변환
+//    (또는 기존 시트를 새로 만들어서 같은 시트명/구조로 복사)
+// 2) 만들어진 구글 시트의 주소창에서 시트 ID 복사
+//    예) https://docs.google.com/spreadsheets/d/『이부분이 ID』/edit#gid=0
+// 3) 아래 GOOGLE_SHEET_ID에 ID만 붙여넣기 (따옴표 안쪽)
+// 4) 구글 시트 → 공유 → "링크가 있는 모든 사용자(뷰어)" 로 설정
+//    (수정은 본인 계정에서만, 앱은 읽기만 하므로 이것으로 충분)
+//
+// ※ 비워두면 "설정 필요" 메시지가 표시되고, 기존 앱은 그대로 작동합니다.
+const GOOGLE_SHEET_ID = '1R8FhYIy9nGBgecDvgyoSIPbjCnYCt60OQzYdUl8Uykk';
+const GOOGLE_SHEET_GID = '';  // 선택: 특정 시트 탭을 지정하고 싶을 때. 비우면 전체 워크북.
+
+// 구글 시트를 .xlsx로 내보내는 export URL
+function buildGoogleSheetExportUrl() {
+  if (!GOOGLE_SHEET_ID) return null;
+  // .xlsx로 내보내면 기존 parseV5Excel 로직을 그대로 재활용할 수 있음 (다중 시트 지원)
+  return `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=xlsx`;
+}
+
+const GSHEET_SYNC_KEY = 'jarvis_gsheet_last_sync';
+
+function updateGsheetStatus(state, message) {
+  // state: 'idle' | 'ok' | 'syncing' | 'error'
+  const dot = document.getElementById('gsheetDot');
+  const txt = document.getElementById('gsheetStatusText');
+  const banner = document.getElementById('gsheetWarnBanner');
+  if (!dot || !txt) return;
+  dot.className = 'gsheet-dot';
+  if (state === 'ok') dot.classList.add('ok');
+  else if (state === 'syncing') dot.classList.add('syncing');
+  else if (state === 'error') dot.classList.add('error');
+  txt.textContent = message;
+  if (banner) {
+    if (state === 'error') banner.classList.add('show');
+    else banner.classList.remove('show');
+  }
+}
+
+function loadLastSyncTime() {
+  try {
+    const t = localStorage.getItem(GSHEET_SYNC_KEY);
+    if (t) {
+      const d = new Date(parseInt(t, 10));
+      const s = d.toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      updateGsheetStatus('ok', '마지막 동기화: ' + s);
+    } else {
+      updateGsheetStatus('idle', '아직 동기화 안 함');
+    }
+  } catch (e) { /* noop */ }
+}
+
+function openGoogleSheet() {
+  if (!GOOGLE_SHEET_ID) {
+    alert('구글 시트 ID가 설정되지 않았습니다.\n\nindex.html 파일 상단의 GOOGLE_SHEET_ID에 본인 시트 ID를 붙여넣으세요.\n(자세한 방법은 해당 줄 주석 참고)');
+    return;
+  }
+  const url = `https://docs.google.com/spreadsheets/d/1R8FhYIy9nGBgecDvgyoSIPbjCnYCt60OQzYdUl8Uykk/edit`;
+  window.open(url, '_blank');
+}
+
+async function syncFromGoogleSheet() {
+  const url = buildGoogleSheetExportUrl();
+  if (!url) {
+    alert('구글 시트 ID가 설정되지 않았습니다.\n\nindex.html 상단의 GOOGLE_SHEET_ID에 본인 시트 ID를 붙여넣으세요.');
+    updateGsheetStatus('error', '시트 ID 미설정');
+    return;
+  }
+
+  const btn = document.getElementById('gsheetSyncBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 동기화 중...'; }
+  updateGsheetStatus('syncing', '구글 시트에서 데이터 가져오는 중...');
+
+  try {
+    // 캐시 우회를 위해 타임스탬프 파라미터 추가
+    const cacheBustUrl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+    const res = await fetch(cacheBustUrl, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const buffer = await res.arrayBuffer();
+    const data = new Uint8Array(buffer);
+    const workbook = XLSX.read(data, { type: 'array' });
+
+    // V5 형식 감지 (기존 엑셀 업로드 로직과 동일하게)
+    const sheetNames = workbook.SheetNames.map(s => s.toLowerCase());
+    const isV5 = ['kospi', 'lever', 'nasq', 'vix'].every(
+      name => sheetNames.includes(name.toLowerCase())
+    );
+
+    if (isV5) {
+      // 기존 parseV5Excel 호출 → pendingUploadData에 적재됨
+      parseV5Excel(workbook);
+    } else {
+      // 단일 시트 형식
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      if (json.length < 2) throw new Error('데이터가 비어있습니다');
+      parseUploadData(json);
+    }
+
+    // 파싱된 데이터가 있으면 자동 확정 (구글 시트 동기화는 신뢰하고 즉시 반영)
+    if (pendingUploadData && pendingUploadData.length > 0) {
+      // confirmUpload를 직접 호출하지 않고, pendingUploadData를 allHistory에 병합
+      const merged = [...allHistory];
+      const dateMap = {};
+      merged.forEach((h, i) => { dateMap[h.date] = i; });
+
+      let newCount = 0, updateCount = 0;
+      pendingUploadData.forEach(item => {
+        if (dateMap[item.date] !== undefined) {
+          merged[dateMap[item.date]] = { ...merged[dateMap[item.date]], ...item };
+          updateCount++;
+        } else {
+          merged.push(item);
+          dateMap[item.date] = merged.length - 1;
+          newCount++;
+        }
+      });
+
+      merged.sort((a, b) => a.date.localeCompare(b.date));
+      allHistory = merged;
+      saveUserData();
+      renderHistory();
+
+      // 프리뷰 숨기기
+      const preview = document.getElementById('uploadPreview');
+      if (preview) preview.classList.remove('show');
+      pendingUploadData = [];
+
+      // 동기화 시각 저장
+      const now = Date.now();
+      localStorage.setItem(GSHEET_SYNC_KEY, String(now));
+      const timeStr = new Date(now).toLocaleString('ko-KR', {
+        month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+      });
+      updateGsheetStatus('ok', '마지막 동기화: ' + timeStr);
+      showToast(`✅ 동기화 완료 (신규 ${newCount}건, 갱신 ${updateCount}건)`);
+    } else {
+      throw new Error('구글 시트에서 데이터를 찾지 못했습니다');
+    }
+  } catch (err) {
+    console.error('구글 시트 동기화 실패:', err);
+    let msg = '동기화 실패';
+    if (err.message.includes('HTTP 403') || err.message.includes('HTTP 401')) {
+      msg = '접근 거부 (시트 공유 설정 확인 필요)';
+    } else if (err.message.includes('HTTP 404')) {
+      msg = '시트를 찾을 수 없음 (ID 확인)';
+    } else if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
+      msg = '네트워크 오류';
+    } else {
+      msg = err.message || '알 수 없는 오류';
+    }
+    updateGsheetStatus('error', '⚠️ ' + msg);
+    showToast('❌ 동기화 실패: ' + msg, 4000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 구글 시트에서 불러오기'; }
+  }
+}
 
 // ── 1. V5 HISTORICAL SEED DATA ───────────────────────────────
 const V5_HISTORY = [{"date": "2024/12/02", "kospi": 2454.48, "lever": 14580, "nasq": 19403.95, "vix": 13.34, "f_day": -1309, "i_day": 3891, "memo": ""}, {"date": "2024/12/03", "kospi": 2500.1, "lever": 15035, "nasq": 19480.91, "vix": 13.3, "f_day": 5655, "i_day": 2796, "memo": ""}, {"date": "2024/12/04", "kospi": 2464.0, "lever": 14620, "nasq": 19735.12, "vix": 13.45, "f_day": -4071, "i_day": 164, "memo": ""}, {"date": "2024/12/05", "kospi": 2441.85, "lever": 14390, "nasq": 19700.26, "vix": 13.54, "f_day": -3174, "i_day": 563, "memo": ""}, {"date": "2024/12/06", "kospi": 2428.16, "lever": 14245, "nasq": 19859.77, "vix": 12.77, "f_day": -2841, "i_day": 8255, "memo": ""}, {"date": "2024/12/09", "kospi": 2360.58, "lever": 13535, "nasq": 19736.69, "vix": 14.19, "f_day": 1027, "i_day": 6916, "memo": ""}, {"date": "2024/12/10", "kospi": 2417.84, "lever": 14090, "nasq": 19687.24, "vix": 14.18, "f_day": -1047, "i_day": 4596, "memo": ""}, {"date": "2024/12/11", "kospi": 2442.51, "lever": 14350, "nasq": 20034.89, "vix": 13.58, "f_day": -1376, "i_day": 1765, "memo": ""}, {"date": "2024/12/12", "kospi": 2482.12, "lever": 14800, "nasq": 19902.84, "vix": 13.92, "f_day": -209, "i_day": 1563, "memo": ""}, {"date": "2024/12/13", "kospi": 2494.46, "lever": 14900, "nasq": 19926.72, "vix": 13.81, "f_day": -1739, "i_day": 1399, "memo": ""}, {"date": "2024/12/16", "kospi": 2488.97, "lever": 14795, "nasq": 20173.89, "vix": 14.69, "f_day": -4339, "i_day": 1, "memo": ""}, {"date": "2024/12/17", "kospi": 2456.81, "lever": 14450, "nasq": 20109.06, "vix": 15.87, "f_day": -7020, "i_day": 1566, "memo": ""}, {"date": "2024/12/18", "kospi": 2484.43, "lever": 14860, "nasq": 19392.69, "vix": 27.62, "f_day": 3924, "i_day": 1340, "memo": ""}, {"date": "2024/12/19", "kospi": 2435.93, "lever": 14185, "nasq": 19372.77, "vix": 24.09, "f_day": -4338, "i_day": -5099, "memo": ""}, {"date": "2024/12/20", "kospi": 2404.15, "lever": 13775, "nasq": 19572.6, "vix": 18.36, "f_day": -8224, "i_day": -883, "memo": ""}, {"date": "2024/12/23", "kospi": 2442.01, "lever": 14230, "nasq": 19764.88, "vix": 16.78, "f_day": 1448, "i_day": 4352, "memo": ""}, {"date": "2024/12/24", "kospi": 2440.52, "lever": 14230, "nasq": 20031.13, "vix": 14.27, "f_day": -62, "i_day": 239, "memo": ""}, {"date": "2024/12/26", "kospi": 2429.67, "lever": 14080, "nasq": 20020.36, "vix": 14.73, "f_day": 204, "i_day": 1859, "memo": ""}, {"date": "2024/12/27", "kospi": 2404.77, "lever": 13995, "nasq": 19722.03, "vix": 15.95, "f_day": -1739, "i_day": -1158, "memo": ""}, {"date": "2024/12/30", "kospi": 2399.49, "lever": 13915, "nasq": 19486.79, "vix": 17.4, "f_day": -1207, "i_day": 556, "memo": ""}, {"date": "2025/01/02", "kospi": 2398.94, "lever": 13830, "nasq": 19280.79, "vix": 17.93, "f_day": -2382, "i_day": -2588, "memo": ""}, {"date": "2025/01/03", "kospi": 2441.92, "lever": 14380, "nasq": 19621.68, "vix": 16.13, "f_day": 2843, "i_day": 3204, "memo": ""}, {"date": "2025/01/06", "kospi": 2488.64, "lever": 14965, "nasq": 19864.98, "vix": 16.04, "f_day": 3705, "i_day": 654, "memo": ""}, {"date": "2025/01/07", "kospi": 2492.1, "lever": 15005, "nasq": 19489.68, "vix": 17.82, "f_day": 1629, "i_day": -422, "memo": ""}, {"date": "2025/01/08", "kospi": 2521.05, "lever": 15285, "nasq": 19478.88, "vix": 17.7, "f_day": 2220, "i_day": 1097, "memo": ""}, {"date": "2025/01/09", "kospi": 2521.9, "lever": 15265, "nasq": 19478.88, "vix": 17.7, "f_day": 7510, "i_day": -5056, "memo": ""}, {"date": "2025/01/10", "kospi": 2515.78, "lever": 15230, "nasq": 19161.63, "vix": 19.54, "f_day": -38, "i_day": -3975, "memo": ""}, {"date": "2025/01/13", "kospi": 2489.56, "lever": 14825, "nasq": 19088.1, "vix": 19.19, "f_day": -8743, "i_day": 260, "memo": ""}, {"date": "2025/01/14", "kospi": 2497.4, "lever": 14940, "nasq": 19044.39, "vix": 18.71, "f_day": -2965, "i_day": -580, "memo": ""}, {"date": "2025/01/15", "kospi": 2496.81, "lever": 14875, "nasq": 19511.23, "vix": 16.12, "f_day": 568, "i_day": -2590, "memo": ""}, {"date": "2025/01/16", "kospi": 2527.49, "lever": 15310, "nasq": 19338.29, "vix": 16.6, "f_day": 6263, "i_day": 189, "memo": ""}, {"date": "2025/01/17", "kospi": 2523.55, "lever": 15240, "nasq": 19630.2, "vix": 15.97, "f_day": -2338, "i_day": -1006, "memo": ""}, {"date": "2025/01/20", "kospi": 2520.05, "lever": 15190, "nasq": 19630.2, "vix": 15.97, "f_day": -4185, "i_day": 663, "memo": ""}, {"date": "2025/01/21", "kospi": 2518.03, "lever": 15225, "nasq": 19756.78, "vix": 15.06, "f_day": -1729, "i_day": 625, "memo": ""}, {"date": "2025/01/22", "kospi": 2547.06, "lever": 15580, "nasq": 20009.34, "vix": 15.1, "f_day": 3507, "i_day": 4209, "memo": ""}, {"date": "2025/01/23", "kospi": 2515.49, "lever": 15220, "nasq": 20053.68, "vix": 15.02, "f_day": -6196, "i_day": -2032, "memo": ""}, {"date": "2025/01/24", "kospi": 2536.8, "lever": 15410, "nasq": 19954.3, "vix": 14.85, "f_day": 2734, "i_day": 436, "memo": ""}, {"date": "2025/01/31", "kospi": 2517.37, "lever": 15095, "nasq": 19627.44, "vix": 16.43, "f_day": -11756, "i_day": 2859, "memo": ""}, {"date": "2025/02/03", "kospi": 2453.95, "lever": 14275, "nasq": 19391.96, "vix": 18.62, "f_day": -8707, "i_day": -3704, "memo": ""}, {"date": "2025/02/04", "kospi": 2481.69, "lever": 14645, "nasq": 19654.02, "vix": 17.21, "f_day": 772, "i_day": 1231, "memo": ""}, {"date": "2025/02/05", "kospi": 2509.27, "lever": 14975, "nasq": 19692.33, "vix": 15.77, "f_day": 656, "i_day": 312, "memo": ""}, {"date": "2025/02/06", "kospi": 2536.75, "lever": 15280, "nasq": 19791.99, "vix": 15.5, "f_day": 3556, "i_day": 1612, "memo": ""}, {"date": "2025/02/07", "kospi": 2521.92, "lever": 15070, "nasq": 19523.4, "vix": 16.54, "f_day": -2400, "i_day": -2098, "memo": ""}, {"date": "2025/02/10", "kospi": 2521.27, "lever": 15120, "nasq": 19714.27, "vix": 15.81, "f_day": -2770, "i_day": 2627, "memo": ""}, {"date": "2025/02/11", "kospi": 2539.05, "lever": 15345, "nasq": 19643.86, "vix": 16.02, "f_day": 1408, "i_day": 2437, "memo": ""}, {"date": "2025/02/12", "kospi": 2548.39, "lever": 15390, "nasq": 19649.95, "vix": 15.89, "f_day": 3706, "i_day": -2217, "memo": ""}, {"date": "2025/02/13", "kospi": 2583.17, "lever": 15700, "nasq": 19945.64, "vix": 15.1, "f_day": -1134, "i_day": 6730, "memo": ""}, {"date": "2025/02/14", "kospi": 2591.05, "lever": 15900, "nasq": 20026.77, "vix": 14.77, "f_day": -3204, "i_day": 3661, "memo": ""}, {"date": "2025/02/17", "kospi": 2610.42, "lever": 16120, "nasq": 20026.77, "vix": 14.77, "f_day": -2235, "i_day": 2431, "memo": ""}, {"date": "2025/02/18", "kospi": 2626.81, "lever": 16350, "nasq": 20041.26, "vix": 15.35, "f_day": 189, "i_day": 1649, "memo": ""}, {"date": "2025/02/19", "kospi": 2671.52, "lever": 17010, "nasq": 20056.25, "vix": 15.27, "f_day": 3956, "i_day": 7767, "memo": ""}, {"date": "2025/02/20", "kospi": 2654.06, "lever": 16720, "nasq": 19962.36, "vix": 15.66, "f_day": -2884, "i_day": -1079, "memo": ""}, {"date": "2025/02/21", "kospi": 2654.58, "lever": 16760, "nasq": 19524.01, "vix": 18.21, "f_day": -2163, "i_day": 1181, "memo": ""}, {"date": "2025/02/24", "kospi": 2645.27, "lever": 16530, "nasq": 19286.93, "vix": 18.98, "f_day": -2001, "i_day": -925, "memo": ""}, {"date": "2025/02/25", "kospi": 2630.29, "lever": 16380, "nasq": 19026.39, "vix": 19.43, "f_day": -3206, "i_day": -945, "memo": ""}, {"date": "2025/02/26", "kospi": 2641.09, "lever": 16530, "nasq": 19075.26, "vix": 19.1, "f_day": -3221, "i_day": 2405, "memo": ""}, {"date": "2025/02/27", "kospi": 2621.75, "lever": 16360, "nasq": 18544.42, "vix": 21.13, "f_day": -1786, "i_day": -3390, "memo": ""}, {"date": "2025/02/28", "kospi": 2532.78, "lever": 15295, "nasq": 18847.28, "vix": 19.63, "f_day": -15562, "i_day": -6166, "memo": ""}, {"date": "2025/03/04", "kospi": 2528.92, "lever": 15205, "nasq": 18285.16, "vix": 23.51, "f_day": -1945, "i_day": -1468, "memo": ""}, {"date": "2025/03/05", "kospi": 2558.13, "lever": 15460, "nasq": 18552.73, "vix": 21.93, "f_day": -2265, "i_day": 480, "memo": ""}, {"date": "2025/03/06", "kospi": 2576.16, "lever": 15725, "nasq": 18069.26, "vix": 24.87, "f_day": 1375, "i_day": 1563, "memo": ""}, {"date": "2025/03/07", "kospi": 2563.48, "lever": 15610, "nasq": 18196.22, "vix": 23.37, "f_day": 591, "i_day": 281, "memo": ""}, {"date": "2025/03/10", "kospi": 2570.39, "lever": 15680, "nasq": 17468.32, "vix": 27.86, "f_day": -4292, "i_day": 1427, "memo": ""}, {"date": "2025/03/11", "kospi": 2537.6, "lever": 15350, "nasq": 17436.1, "vix": 26.92, "f_day": -15403, "i_day": -2381, "memo": ""}, {"date": "2025/03/12", "kospi": 2574.82, "lever": 15810, "nasq": 17648.45, "vix": 24.23, "f_day": 3796, "i_day": 318, "memo": ""}, {"date": "2025/03/13", "kospi": 2573.64, "lever": 15640, "nasq": 17303.01, "vix": 24.66, "f_day": -4809, "i_day": 4448, "memo": ""}, {"date": "2025/03/14", "kospi": 2566.36, "lever": 15805, "nasq": 17754.09, "vix": 21.77, "f_day": -2954, "i_day": -205, "memo": ""}, {"date": "2025/03/17", "kospi": 2610.69, "lever": 16410, "nasq": 17808.66, "vix": 20.51, "f_day": 6223, "i_day": 4948, "memo": ""}, {"date": "2025/03/18", "kospi": 2612.34, "lever": 16505, "nasq": 17504.12, "vix": 21.7, "f_day": 4437, "i_day": 951, "memo": ""}, {"date": "2025/03/19", "kospi": 2628.62, "lever": 16790, "nasq": 17750.79, "vix": 19.9, "f_day": 3052, "i_day": 2873, "memo": ""}, {"date": "2025/03/20", "kospi": 2637.1, "lever": 17035, "nasq": 17691.63, "vix": 19.8, "f_day": 5515, "i_day": 664, "memo": ""}, {"date": "2025/03/21", "kospi": 2643.13, "lever": 17175, "nasq": 17784.05, "vix": 19.28, "f_day": 8503, "i_day": -4020, "memo": ""}, {"date": "2025/03/24", "kospi": 2632.07, "lever": 17055, "nasq": 18188.59, "vix": 17.48, "f_day": 61, "i_day": -282, "memo": ""}, {"date": "2025/03/25", "kospi": 2615.81, "lever": 16895, "nasq": 18271.86, "vix": 17.15, "f_day": -735, "i_day": 706, "memo": ""}, {"date": "2025/03/26", "kospi": 2643.94, "lever": 17190, "nasq": 17899.02, "vix": 18.33, "f_day": 3499, "i_day": 2593, "memo": ""}, {"date": "2025/03/27", "kospi": 2607.15, "lever": 16760, "nasq": 17804.03, "vix": 18.69, "f_day": 887, "i_day": -3154, "memo": ""}, {"date": "2025/03/28", "kospi": 2557.98, "lever": 16205, "nasq": 17322.99, "vix": 21.65, "f_day": -6425, "i_day": 15, "memo": ""}, {"date": "2025/03/31", "kospi": 2481.12, "lever": 15295, "nasq": 17299.29, "vix": 22.28, "f_day": -15793, "i_day": 6624, "memo": ""}, {"date": "2025/04/01", "kospi": 2521.39, "lever": 15765, "nasq": 17449.89, "vix": 21.77, "f_day": -3914, "i_day": 1796, "memo": ""}, {"date": "2025/04/02", "kospi": 2505.86, "lever": 15570, "nasq": 17601.05, "vix": 21.51, "f_day": -7296, "i_day": 1493, "memo": ""}, {"date": "2025/04/03", "kospi": 2486.7, "lever": 15165, "nasq": 16550.61, "vix": 30.02, "f_day": -13792, "i_day": 4613, "memo": ""}, {"date": "2025/04/04", "kospi": 2465.42, "lever": 14900, "nasq": 15587.79, "vix": 45.31, "f_day": -18104, "i_day": 6112, "memo": ""}, {"date": "2025/04/07", "kospi": 2328.2, "lever": 13195, "nasq": 15603.26, "vix": 46.98, "f_day": -21710, "i_day": 2404, "memo": ""}, {"date": "2025/04/08", "kospi": 2334.23, "lever": 13165, "nasq": 15267.91, "vix": 52.33, "f_day": -6485, "i_day": -1023, "memo": ""}, {"date": "2025/04/09", "kospi": 2293.7, "lever": 12715, "nasq": 17124.97, "vix": 33.62, "f_day": -10091, "i_day": -748, "memo": ""}, {"date": "2025/04/10", "kospi": 2445.06, "lever": 14260, "nasq": 16387.31, "vix": 40.72, "f_day": 3328, "i_day": 7028, "memo": ""}, {"date": "2025/04/11", "kospi": 2432.72, "lever": 14175, "nasq": 16724.46, "vix": 37.56, "f_day": -6895, "i_day": 1308, "memo": ""}, {"date": "2025/04/14", "kospi": 2455.89, "lever": 14370, "nasq": 16831.48, "vix": 30.89, "f_day": -2332, "i_day": 8, "memo": ""}, {"date": "2025/04/15", "kospi": 2477.41, "lever": 14635, "nasq": 16823.17, "vix": 30.12, "f_day": -1118, "i_day": 1910, "memo": ""}, {"date": "2025/04/16", "kospi": 2447.43, "lever": 14185, "nasq": 16307.16, "vix": 32.64, "f_day": -4644, "i_day": -330, "memo": ""}, {"date": "2025/04/17", "kospi": 2470.41, "lever": 14480, "nasq": 16286.45, "vix": 29.65, "f_day": -3513, "i_day": 3862, "memo": ""}, {"date": "2025/04/18", "kospi": 2483.42, "lever": 14650, "nasq": 16286.45, "vix": 29.65, "f_day": -1262, "i_day": 795, "memo": ""}, {"date": "2025/04/21", "kospi": 2488.42, "lever": 14695, "nasq": 15870.9, "vix": 33.82, "f_day": -3143, "i_day": 193, "memo": ""}, {"date": "2025/04/22", "kospi": 2486.64, "lever": 14610, "nasq": 16300.42, "vix": 30.57, "f_day": -2447, "i_day": 33, "memo": ""}, {"date": "2025/04/23", "kospi": 2525.56, "lever": 15155, "nasq": 16708.05, "vix": 28.45, "f_day": -1854, "i_day": 7115, "memo": ""}, {"date": "2025/04/24", "kospi": 2522.33, "lever": 15080, "nasq": 17166.04, "vix": 26.47, "f_day": -318, "i_day": -1962, "memo": ""}, {"date": "2025/04/25", "kospi": 2546.3, "lever": 15365, "nasq": 17382.94, "vix": 24.84, "f_day": 6316, "i_day": 5183, "memo": ""}, {"date": "2025/04/28", "kospi": 2548.86, "lever": 15390, "nasq": 17366.13, "vix": 25.15, "f_day": -1317, "i_day": 846, "memo": ""}, {"date": "2025/04/29", "kospi": 2565.42, "lever": 15590, "nasq": 17461.32, "vix": 24.17, "f_day": 6992, "i_day": -5738, "memo": ""}, {"date": "2025/04/30", "kospi": 2556.61, "lever": 15550, "nasq": 17446.34, "vix": 24.7, "f_day": -2058, "i_day": -2285, "memo": ""}, {"date": "2025/05/02", "kospi": 2559.79, "lever": 15550, "nasq": 17977.73, "vix": 22.68, "f_day": -1607, "i_day": 3134, "memo": ""}, {"date": "2025/05/07", "kospi": 2573.8, "lever": 15780, "nasq": 17738.16, "vix": 23.55, "f_day": 3793, "i_day": 1104, "memo": ""}, {"date": "2025/05/08", "kospi": 2579.48, "lever": 15800, "nasq": 17928.14, "vix": 22.48, "f_day": 1143, "i_day": -2011, "memo": ""}, {"date": "2025/05/09", "kospi": 2577.27, "lever": 15800, "nasq": 17928.92, "vix": 21.9, "f_day": 450, "i_day": -1832, "memo": ""}, {"date": "2025/05/12", "kospi": 2607.33, "lever": 16235, "nasq": 18708.34, "vix": 18.39, "f_day": 372, "i_day": 4173, "memo": ""}, {"date": "2025/05/13", "kospi": 2608.42, "lever": 16320, "nasq": 19010.09, "vix": 18.22, "f_day": 1151, "i_day": -1072, "memo": ""}, {"date": "2025/05/14", "kospi": 2640.57, "lever": 16750, "nasq": 19146.81, "vix": 18.62, "f_day": 5100, "i_day": 5536, "memo": ""}, {"date": "2025/05/15", "kospi": 2621.36, "lever": 16540, "nasq": 19112.32, "vix": 17.83, "f_day": 2174, "i_day": -3939, "memo": ""}, {"date": "2025/05/16", "kospi": 2626.87, "lever": 16635, "nasq": 19211.1, "vix": 17.24, "f_day": 1752, "i_day": 1206, "memo": ""}, {"date": "2025/05/19", "kospi": 2603.42, "lever": 16230, "nasq": 19215.46, "vix": 18.14, "f_day": -1693, "i_day": -2056, "memo": ""}, {"date": "2025/05/20", "kospi": 2601.8, "lever": 16280, "nasq": 19142.71, "vix": 18.09, "f_day": -1024, "i_day": 667, "memo": ""}, {"date": "2025/05/21", "kospi": 2625.58, "lever": 16515, "nasq": 18872.64, "vix": 20.87, "f_day": 2122, "i_day": 956, "memo": ""}, {"date": "2025/05/22", "kospi": 2593.67, "lever": 16080, "nasq": 18925.74, "vix": 20.28, "f_day": -2964, "i_day": -4686, "memo": ""}, {"date": "2025/05/23", "kospi": 2592.09, "lever": 16100, "nasq": 18737.21, "vix": 22.29, "f_day": -425, "i_day": -1424, "memo": ""}, {"date": "2025/05/26", "kospi": 2644.4, "lever": 16625, "nasq": 18737.21, "vix": 22.29, "f_day": 1282, "i_day": 4326, "memo": ""}, {"date": "2025/05/27", "kospi": 2637.22, "lever": 16705, "nasq": 19199.16, "vix": 18.96, "f_day": -1120, "i_day": -538, "memo": ""}, {"date": "2025/05/28", "kospi": 2670.15, "lever": 17180, "nasq": 19100.94, "vix": 19.31, "f_day": 3348, "i_day": 8297, "memo": ""}, {"date": "2025/05/29", "kospi": 2720.64, "lever": 17865, "nasq": 19175.87, "vix": 19.18, "f_day": 3322, "i_day": 7269, "memo": ""}, {"date": "2025/05/30", "kospi": 2697.67, "lever": 17475, "nasq": 19113.77, "vix": 18.57, "f_day": -7005, "i_day": -437, "memo": ""}, {"date": "2025/06/02", "kospi": 2698.97, "lever": 17485, "nasq": 19242.61, "vix": 18.36, "f_day": 1177, "i_day": -2560, "memo": ""}, {"date": "2025/06/04", "kospi": 2770.84, "lever": 18455, "nasq": 19460.49, "vix": 17.61, "f_day": 11313, "i_day": 2612, "memo": ""}, {"date": "2025/06/05", "kospi": 2812.05, "lever": 19125, "nasq": 19298.45, "vix": 18.48, "f_day": 10066, "i_day": 2683, "memo": ""}, {"date": "2025/06/09", "kospi": 2855.77, "lever": 19750, "nasq": 19591.24, "vix": 17.16, "f_day": 9470, "i_day": -7844, "memo": ""}, {"date": "2025/06/10", "kospi": 2871.85, "lever": 19955, "nasq": 19714.99, "vix": 16.95, "f_day": 6383, "i_day": 46, "memo": ""}, {"date": "2025/06/11", "kospi": 2907.04, "lever": 20500, "nasq": 19615.88, "vix": 17.26, "f_day": 1119, "i_day": 2539, "memo": ""}, {"date": "2025/06/12", "kospi": 2920.03, "lever": 20575, "nasq": 19662.49, "vix": 18.02, "f_day": 3664, "i_day": -3205, "memo": ""}, {"date": "2025/06/13", "kospi": 2894.62, "lever": 20190, "nasq": 19406.83, "vix": 20.82, "f_day": 605, "i_day": -6490, "memo": ""}, {"date": "2025/06/16", "kospi": 2946.66, "lever": 20925, "nasq": 19701.21, "vix": 19.11, "f_day": -2956, "i_day": 2872, "memo": ""}, {"date": "2025/06/17", "kospi": 2950.3, "lever": 21045, "nasq": 19521.09, "vix": 21.6, "f_day": -2344, "i_day": -1564, "memo": ""}, {"date": "2025/06/18", "kospi": 2972.19, "lever": 21415, "nasq": 19546.27, "vix": 20.14, "f_day": 2648, "i_day": 829, "memo": ""}, {"date": "2025/06/19", "kospi": 2977.74, "lever": 21480, "nasq": 19546.27, "vix": 20.14, "f_day": -1652, "i_day": -3172, "memo": ""}, {"date": "2025/06/20", "kospi": 3021.84, "lever": 22065, "nasq": 19447.41, "vix": 20.62, "f_day": 5560, "i_day": 420, "memo": ""}, {"date": "2025/06/23", "kospi": 3014.47, "lever": 22010, "nasq": 19630.97, "vix": 19.83, "f_day": -4882, "i_day": -9629, "memo": ""}, {"date": "2025/06/24", "kospi": 3103.64, "lever": 23475, "nasq": 19912.53, "vix": 17.48, "f_day": 4504, "i_day": 2857, "memo": ""}, {"date": "2025/06/25", "kospi": 3108.25, "lever": 23630, "nasq": 19973.55, "vix": 16.76, "f_day": -2513, "i_day": -6478, "memo": ""}, {"date": "2025/06/26", "kospi": 3079.56, "lever": 23175, "nasq": 20167.91, "vix": 16.59, "f_day": -7034, "i_day": -4650, "memo": ""}, {"date": "2025/06/27", "kospi": 3055.94, "lever": 22915, "nasq": 20273.46, "vix": 16.32, "f_day": -8974, "i_day": 3788, "memo": ""}, {"date": "2025/06/30", "kospi": 3071.7, "lever": 23180, "nasq": 20369.73, "vix": 16.73, "f_day": -6898, "i_day": 4608, "memo": ""}, {"date": "2025/07/01", "kospi": 3089.65, "lever": 23310, "nasq": 20202.89, "vix": 16.83, "f_day": 1882, "i_day": 4407, "memo": ""}, {"date": "2025/07/02", "kospi": 3075.06, "lever": 23120, "nasq": 20393.13, "vix": 16.64, "f_day": -4067, "i_day": 438, "memo": ""}, {"date": "2025/07/03", "kospi": 3116.27, "lever": 23835, "nasq": 20601.1, "vix": 16.38, "f_day": 6952, "i_day": 5885, "memo": ""}, {"date": "2025/07/04", "kospi": 3054.28, "lever": 22900, "nasq": 20601.1, "vix": 16.38, "f_day": 1233, "i_day": -4195, "memo": ""}, {"date": "2025/07/07", "kospi": 3059.47, "lever": 22960, "nasq": 20412.52, "vix": 17.79, "f_day": -1074, "i_day": -1030, "memo": ""}, {"date": "2025/07/08", "kospi": 3114.95, "lever": 23830, "nasq": 20418.46, "vix": 16.81, "f_day": 2826, "i_day": -195, "memo": ""}, {"date": "2025/07/09", "kospi": 3133.74, "lever": 23940, "nasq": 20611.34, "vix": 15.94, "f_day": -4856, "i_day": -1117, "memo": ""}, {"date": "2025/07/10", "kospi": 3183.23, "lever": 24595, "nasq": 20630.67, "vix": 15.78, "f_day": 5125, "i_day": 536, "memo": ""}, {"date": "2025/07/11", "kospi": 3175.77, "lever": 24625, "nasq": 20585.53, "vix": 16.4, "f_day": 2810, "i_day": -919, "memo": ""}, {"date": "2025/07/14", "kospi": 3202.03, "lever": 25090, "nasq": 20640.33, "vix": 17.2, "f_day": 4190, "i_day": -1290, "memo": ""}, {"date": "2025/07/15", "kospi": 3215.28, "lever": 25390, "nasq": 20677.8, "vix": 17.38, "f_day": 2841, "i_day": -718, "memo": ""}, {"date": "2025/07/16", "kospi": 3186.38, "lever": 24900, "nasq": 20730.49, "vix": 17.16, "f_day": -505, "i_day": -6293, "memo": ""}, {"date": "2025/07/17", "kospi": 3192.29, "lever": 25030, "nasq": 20885.65, "vix": 16.52, "f_day": 706, "i_day": 1906, "memo": ""}, {"date": "2025/07/18", "kospi": 3188.07, "lever": 24970, "nasq": 20895.66, "vix": 16.41, "f_day": 1391, "i_day": 514, "memo": ""}, {"date": "2025/07/21", "kospi": 3210.81, "lever": 25335, "nasq": 20974.18, "vix": 16.65, "f_day": 9836, "i_day": 1178, "memo": ""}, {"date": "2025/07/22", "kospi": 3169.94, "lever": 24645, "nasq": 20892.69, "vix": 16.5, "f_day": -2337, "i_day": -4644, "memo": ""}, {"date": "2025/07/23", "kospi": 3183.77, "lever": 24830, "nasq": 21020.02, "vix": 15.37, "f_day": 4540, "i_day": 2288, "memo": ""}, {"date": "2025/07/24", "kospi": 3190.45, "lever": 24760, "nasq": 21057.96, "vix": 15.39, "f_day": 8084, "i_day": 1427, "memo": ""}, {"date": "2025/07/25", "kospi": 3196.05, "lever": 24880, "nasq": 21108.32, "vix": 14.93, "f_day": 2738, "i_day": 934, "memo": ""}, {"date": "2025/07/28", "kospi": 3209.52, "lever": 25135, "nasq": 21178.58, "vix": 15.03, "f_day": 5066, "i_day": 5500, "memo": ""}, {"date": "2025/07/29", "kospi": 3230.57, "lever": 25465, "nasq": 21098.29, "vix": 15.98, "f_day": 6031, "i_day": 529, "memo": ""}, {"date": "2025/07/30", "kospi": 3254.47, "lever": 25905, "nasq": 21129.67, "vix": 15.48, "f_day": 6296, "i_day": 3816, "memo": ""}, {"date": "2025/07/31", "kospi": 3245.44, "lever": 25765, "nasq": 21122.45, "vix": 16.72, "f_day": 3459, "i_day": -8241, "memo": ""}, {"date": "2025/08/01", "kospi": 3119.41, "lever": 23635, "nasq": 20650.13, "vix": 20.38, "f_day": -8693, "i_day": -11631, "memo": ""}, {"date": "2025/08/04", "kospi": 3147.75, "lever": 24230, "nasq": 21053.58, "vix": 17.52, "f_day": 1303, "i_day": 1341, "memo": ""}, {"date": "2025/08/05", "kospi": 3198.0, "lever": 24880, "nasq": 20916.55, "vix": 17.85, "f_day": 3594, "i_day": 768, "memo": ""}, {"date": "2025/08/06", "kospi": 3198.14, "lever": 24825, "nasq": 21169.42, "vix": 16.77, "f_day": 2455, "i_day": -4247, "memo": ""}, {"date": "2025/08/07", "kospi": 3227.68, "lever": 25230, "nasq": 21242.7, "vix": 16.57, "f_day": -132, "i_day": 1336, "memo": ""}, {"date": "2025/08/08", "kospi": 3210.01, "lever": 25100, "nasq": 21450.02, "vix": 15.15, "f_day": -1310, "i_day": -1585, "memo": ""}, {"date": "2025/08/11", "kospi": 3206.77, "lever": 25100, "nasq": 21385.4, "vix": 16.25, "f_day": 2626, "i_day": -2097, "memo": ""}, {"date": "2025/08/12", "kospi": 3189.91, "lever": 24955, "nasq": 21681.9, "vix": 14.73, "f_day": -541, "i_day": -1031, "memo": ""}, {"date": "2025/08/13", "kospi": 3224.37, "lever": 25490, "nasq": 21713.14, "vix": 14.49, "f_day": 7176, "i_day": -205, "memo": ""}, {"date": "2025/08/14", "kospi": 3225.66, "lever": 25455, "nasq": 21710.67, "vix": 14.83, "f_day": -846, "i_day": 283, "memo": ""}, {"date": "2025/08/18", "kospi": 3177.28, "lever": 24660, "nasq": 21629.77, "vix": 14.99, "f_day": -5541, "i_day": 690, "memo": ""}, {"date": "2025/08/19", "kospi": 3151.56, "lever": 24285, "nasq": 21314.95, "vix": 15.57, "f_day": -4588, "i_day": 2549, "memo": ""}, {"date": "2025/08/20", "kospi": 3130.09, "lever": 24015, "nasq": 21172.86, "vix": 15.69, "f_day": -1597, "i_day": 5605, "memo": ""}, {"date": "2025/08/21", "kospi": 3141.74, "lever": 24115, "nasq": 21100.31, "vix": 16.6, "f_day": -234, "i_day": 1415, "memo": ""}, {"date": "2025/08/22", "kospi": 3168.73, "lever": 24540, "nasq": 21496.54, "vix": 14.22, "f_day": 2121, "i_day": 1651, "memo": ""}, {"date": "2025/08/25", "kospi": 3209.86, "lever": 25115, "nasq": 21449.29, "vix": 14.79, "f_day": 1471, "i_day": 1595, "memo": ""}, {"date": "2025/08/26", "kospi": 3179.36, "lever": 24670, "nasq": 21544.27, "vix": 14.62, "f_day": -7863, "i_day": -3124, "memo": ""}, {"date": "2025/08/27", "kospi": 3187.16, "lever": 24740, "nasq": 21590.14, "vix": 14.85, "f_day": -1864, "i_day": 365, "memo": ""}, {"date": "2025/08/28", "kospi": 3196.32, "lever": 24985, "nasq": 21705.16, "vix": 14.43, "f_day": -233, "i_day": 3226, "memo": ""}, {"date": "2025/08/29", "kospi": 3186.01, "lever": 24765, "nasq": 21455.55, "vix": 15.36, "f_day": -3809, "i_day": 753, "memo": ""}, {"date": "2025/09/01", "kospi": 3142.93, "lever": 23950, "nasq": 21455.55, "vix": 15.36, "f_day": -2931, "i_day": -1991, "memo": ""}, {"date": "2025/09/02", "kospi": 3172.35, "lever": 24470, "nasq": 21279.63, "vix": 17.17, "f_day": 4483, "i_day": -1270, "memo": ""}, {"date": "2025/09/03", "kospi": 3184.42, "lever": 24710, "nasq": 21497.73, "vix": 16.35, "f_day": 4116, "i_day": -3641, "memo": ""}, {"date": "2025/09/04", "kospi": 3200.83, "lever": 24895, "nasq": 21707.69, "vix": 15.3, "f_day": 2015, "i_day": -156, "memo": ""}, {"date": "2025/09/05", "kospi": 3205.12, "lever": 25075, "nasq": 21700.39, "vix": 15.18, "f_day": -1757, "i_day": 1123, "memo": ""}, {"date": "2025/09/08", "kospi": 3219.59, "lever": 25280, "nasq": 21798.7, "vix": 15.11, "f_day": 2627, "i_day": 1368, "memo": ""}, {"date": "2025/09/09", "kospi": 3260.05, "lever": 25940, "nasq": 21879.49, "vix": 15.04, "f_day": 7140, "i_day": 3802, "memo": ""}, {"date": "2025/09/10", "kospi": 3314.53, "lever": 27045, "nasq": 21886.06, "vix": 15.35, "f_day": 15043, "i_day": 10650, "memo": ""}, {"date": "2025/09/11", "kospi": 3344.2, "lever": 27440, "nasq": 22043.08, "vix": 14.71, "f_day": 2610, "i_day": 8808, "memo": ""}, {"date": "2025/09/12", "kospi": 3395.54, "lever": 28570, "nasq": 22141.1, "vix": 14.76, "f_day": 15740, "i_day": 7308, "memo": ""}, {"date": "2025/09/15", "kospi": 3407.31, "lever": 28850, "nasq": 22348.75, "vix": 15.69, "f_day": 1359, "i_day": -2002, "memo": ""}, {"date": "2025/09/16", "kospi": 3449.62, "lever": 29790, "nasq": 22333.96, "vix": 16.36, "f_day": 19735, "i_day": 1246, "memo": ""}, {"date": "2025/09/17", "kospi": 3413.4, "lever": 29060, "nasq": 22261.33, "vix": 15.72, "f_day": -2152, "i_day": -3134, "memo": ""}, {"date": "2025/09/18", "kospi": 3461.3, "lever": 30070, "nasq": 22470.73, "vix": 15.7, "f_day": 3455, "i_day": 4264, "memo": ""}, {"date": "2025/09/19", "kospi": 3445.24, "lever": 29850, "nasq": 22631.48, "vix": 15.45, "f_day": -3922, "i_day": -4129, "memo": ""}, {"date": "2025/09/22", "kospi": 3468.65, "lever": 30440, "nasq": 22788.98, "vix": 16.1, "f_day": 6367, "i_day": 2940, "memo": ""}, {"date": "2025/09/23", "kospi": 3486.19, "lever": 30920, "nasq": 22573.47, "vix": 16.64, "f_day": 3164, "i_day": -1969, "memo": ""}, {"date": "2025/09/24", "kospi": 3472.14, "lever": 30730, "nasq": 22497.86, "vix": 16.18, "f_day": -2681, "i_day": 2391, "memo": ""}, {"date": "2025/09/25", "kospi": 3471.11, "lever": 30735, "nasq": 22384.7, "vix": 16.74, "f_day": 1952, "i_day": 2831, "memo": ""}, {"date": "2025/09/26", "kospi": 3386.05, "lever": 29205, "nasq": 22484.07, "vix": 15.29, "f_day": -7361, "i_day": -5612, "memo": ""}, {"date": "2025/09/29", "kospi": 3431.21, "lever": 30135, "nasq": 22591.15, "vix": 16.12, "f_day": 5566, "i_day": 3937, "memo": ""}, {"date": "2025/09/30", "kospi": 3424.6, "lever": 29930, "nasq": 22660.01, "vix": 16.28, "f_day": 156, "i_day": -1239, "memo": ""}, {"date": "2025/10/01", "kospi": 3455.83, "lever": 30575, "nasq": 22755.16, "vix": 16.29, "f_day": 9250, "i_day": 2895, "memo": ""}, {"date": "2025/10/02", "kospi": 3549.21, "lever": 32460, "nasq": 22844.05, "vix": 16.63, "f_day": 32641, "i_day": 472, "memo": ""}, {"date": "2025/10/10", "kospi": 3610.6, "lever": 34070, "nasq": 22204.43, "vix": 21.66, "f_day": 9512, "i_day": -6712, "memo": ""}, {"date": "2025/10/13", "kospi": 3584.55, "lever": 33390, "nasq": 22694.61, "vix": 19.03, "f_day": -10105, "i_day": -5202, "memo": ""}, {"date": "2025/10/14", "kospi": 3561.81, "lever": 32715, "nasq": 22521.7, "vix": 20.81, "f_day": 4590, "i_day": -9607, "memo": ""}, {"date": "2025/10/15", "kospi": 3657.28, "lever": 34585, "nasq": 22670.08, "vix": 20.64, "f_day": 2282, "i_day": 8275, "memo": ""}, {"date": "2025/10/16", "kospi": 3748.37, "lever": 36355, "nasq": 22562.54, "vix": 25.31, "f_day": 6703, "i_day": 8547, "memo": ""}, {"date": "2025/10/17", "kospi": 3748.89, "lever": 36560, "nasq": 22679.98, "vix": 20.78, "f_day": 2631, "i_day": -1157, "memo": ""}, {"date": "2025/10/20", "kospi": 3814.69, "lever": 37955, "nasq": 22990.54, "vix": 18.23, "f_day": -1762, "i_day": 5212, "memo": ""}, {"date": "2025/10/21", "kospi": 3823.84, "lever": 38095, "nasq": 22953.67, "vix": 17.87, "f_day": 2, "i_day": 1709, "memo": ""}, {"date": "2025/10/22", "kospi": 3883.68, "lever": 38965, "nasq": 22740.4, "vix": 18.6, "f_day": -7711, "i_day": 6283, "memo": ""}, {"date": "2025/10/23", "kospi": 3845.56, "lever": 38145, "nasq": 22941.8, "vix": 17.3, "f_day": -5316, "i_day": -4695, "memo": ""}, {"date": "2025/10/24", "kospi": 3941.59, "lever": 40100, "nasq": 23204.87, "vix": 16.37, "f_day": 5356, "i_day": 14989, "memo": ""}, {"date": "2025/10/27", "kospi": 4042.83, "lever": 42355, "nasq": 23637.46, "vix": 15.79, "f_day": 5939, "i_day": 940, "memo": ""}, {"date": "2025/10/28", "kospi": 4010.41, "lever": 41515, "nasq": 23827.49, "vix": 16.42, "f_day": -17917, "i_day": -2020, "memo": ""}, {"date": "2025/10/29", "kospi": 4081.15, "lever": 43250, "nasq": 23958.47, "vix": 16.92, "f_day": 104, "i_day": 5697, "memo": ""}, {"date": "2025/10/30", "kospi": 4086.89, "lever": 43510, "nasq": 23581.14, "vix": 16.91, "f_day": -3714, "i_day": -12044, "memo": ""}, {"date": "2025/10/31", "kospi": 4107.5, "lever": 44535, "nasq": 23724.96, "vix": 17.44, "f_day": 11922, "i_day": -11362, "memo": ""}, {"date": "2025/11/03", "kospi": 4221.87, "lever": 47300, "nasq": 23834.72, "vix": 17.17, "f_day": -8869, "i_day": -10, "memo": ""}, {"date": "2025/11/04", "kospi": 4121.74, "lever": 44605, "nasq": 23348.64, "vix": 19.0, "f_day": -24998, "i_day": -7394, "memo": ""}, {"date": "2025/11/05", "kospi": 4004.42, "lever": 42145, "nasq": 23499.8, "vix": 18.01, "f_day": -21619, "i_day": 327, "memo": ""}, {"date": "2025/11/06", "kospi": 4026.45, "lever": 42640, "nasq": 23053.99, "vix": 19.5, "f_day": -16710, "i_day": 8761, "memo": ""}, {"date": "2025/11/07", "kospi": 3953.76, "lever": 41060, "nasq": 23004.54, "vix": 19.08, "f_day": -5066, "i_day": -433, "memo": ""}, {"date": "2025/11/10", "kospi": 4073.24, "lever": 43600, "nasq": 23527.17, "vix": 17.6, "f_day": -535, "i_day": 13393, "memo": ""}, {"date": "2025/11/11", "kospi": 4106.39, "lever": 44430, "nasq": 23468.3, "vix": 17.28, "f_day": 161, "i_day": 136, "memo": ""}, {"date": "2025/11/12", "kospi": 4150.39, "lever": 45350, "nasq": 23406.46, "vix": 17.51, "f_day": -4154, "i_day": 8407, "memo": ""}, {"date": "2025/11/13", "kospi": 4170.63, "lever": 45800, "nasq": 22870.36, "vix": 20.0, "f_day": 9583, "i_day": -7844, "memo": ""}, {"date": "2025/11/14", "kospi": 4011.57, "lever": 41715, "nasq": 22900.59, "vix": 19.83, "f_day": -28643, "i_day": -10434, "memo": ""}, {"date": "2025/11/17", "kospi": 4089.25, "lever": 43480, "nasq": 22708.08, "vix": 22.38, "f_day": 5743, "i_day": 186, "memo": ""}, {"date": "2025/11/18", "kospi": 3953.62, "lever": 40585, "nasq": 22432.85, "vix": 24.69, "f_day": -8262, "i_day": -7426, "memo": ""}, {"date": "2025/11/19", "kospi": 3929.51, "lever": 40030, "nasq": 22564.23, "vix": 23.66, "f_day": -12840, "i_day": 7478, "memo": ""}, {"date": "2025/11/20", "kospi": 4004.85, "lever": 41795, "nasq": 22078.05, "vix": 26.42, "f_day": 5384, "i_day": 7725, "memo": ""}, {"date": "2025/11/21", "kospi": 3853.26, "lever": 38230, "nasq": 22273.08, "vix": 23.43, "f_day": -30943, "i_day": 3470, "memo": ""}, {"date": "2025/11/24", "kospi": 3846.06, "lever": 38235, "nasq": 22872.01, "vix": 20.52, "f_day": -6980, "i_day": 14235, "memo": ""}, {"date": "2025/11/25", "kospi": 3857.78, "lever": 38700, "nasq": 23025.59, "vix": 18.56, "f_day": -566, "i_day": 1425, "memo": ""}, {"date": "2025/11/26", "kospi": 3960.87, "lever": 40845, "nasq": 23214.69, "vix": 17.19, "f_day": 6399, "i_day": 14447, "memo": ""}, {"date": "2025/11/27", "kospi": 3986.91, "lever": 41405, "nasq": 23214.69, "vix": 17.19, "f_day": 1672, "i_day": 3767, "memo": ""}, {"date": "2025/11/28", "kospi": 3926.59, "lever": 40225, "nasq": 23365.69, "vix": 16.35, "f_day": -22286, "i_day": 4559, "memo": ""}, {"date": "2025/12/01", "kospi": 3920.37, "lever": 40055, "nasq": 23275.92, "vix": 17.24, "f_day": 1659, "i_day": -2271, "memo": ""}, {"date": "2025/12/02", "kospi": 3994.93, "lever": 41635, "nasq": 23413.67, "vix": 16.59, "f_day": 13124, "i_day": 4986, "memo": ""}, {"date": "2025/12/03", "kospi": 4036.3, "lever": 42600, "nasq": 23454.09, "vix": 16.08, "f_day": 1905, "i_day": 6823, "memo": ""}, {"date": "2025/12/04", "kospi": 4028.51, "lever": 42330, "nasq": 23505.14, "vix": 15.78, "f_day": -8364, "i_day": 203, "memo": ""}, {"date": "2025/12/05", "kospi": 4100.05, "lever": 43960, "nasq": 23578.13, "vix": 15.41, "f_day": 11135, "i_day": 12168, "memo": ""}, {"date": "2025/12/08", "kospi": 4154.85, "lever": 45135, "nasq": 23545.9, "vix": 16.66, "f_day": 2677, "i_day": -530, "memo": ""}, {"date": "2025/12/09", "kospi": 4143.55, "lever": 44625, "nasq": 23576.49, "vix": 16.93, "f_day": -1814, "i_day": 158, "memo": ""}, {"date": "2025/12/10", "kospi": 4135.0, "lever": 44620, "nasq": 23654.16, "vix": 15.77, "f_day": 3214, "i_day": -3375, "memo": ""}, {"date": "2025/12/11", "kospi": 4110.62, "lever": 43800, "nasq": 23593.86, "vix": 14.85, "f_day": 3686, "i_day": -7819, "memo": ""}, {"date": "2025/12/12", "kospi": 4167.16, "lever": 45065, "nasq": 23195.17, "vix": 15.74, "f_day": 815, "i_day": 14658, "memo": ""}, {"date": "2025/12/15", "kospi": 4090.59, "lever": 43005, "nasq": 23057.41, "vix": 16.5, "f_day": -10820, "i_day": -6288, "memo": ""}, {"date": "2025/12/16", "kospi": 3999.13, "lever": 41080, "nasq": 23111.46, "vix": 16.48, "f_day": -11306, "i_day": -3004, "memo": ""}, {"date": "2025/12/17", "kospi": 4056.41, "lever": 42690, "nasq": 22693.32, "vix": 17.62, "f_day": 0, "i_day": 3767, "memo": ""}, {"date": "2025/12/18", "kospi": 3994.51, "lever": 41675, "nasq": 23006.36, "vix": 16.87, "f_day": -4168, "i_day": -919, "memo": ""}, {"date": "2025/12/19", "kospi": 4020.55, "lever": 42100, "nasq": 23307.62, "vix": 14.91, "f_day": -7857, "i_day": 8921, "memo": ""}, {"date": "2025/12/22", "kospi": 4105.93, "lever": 44105, "nasq": 23428.83, "vix": 14.08, "f_day": 12009, "i_day": 17312, "memo": ""}, {"date": "2025/12/23", "kospi": 4117.32, "lever": 44370, "nasq": 23561.84, "vix": 14.0, "f_day": 9261, "i_day": 3937, "memo": ""}, {"date": "2025/12/24", "kospi": 4108.62, "lever": 44370, "nasq": 23613.31, "vix": 13.47, "f_day": 4836, "i_day": 2211, "memo": ""}, {"date": "2025/12/26", "kospi": 4129.68, "lever": 45105, "nasq": 23593.1, "vix": 13.6, "f_day": 17633, "i_day": 5239, "memo": ""}, {"date": "2025/12/29", "kospi": 4220.56, "lever": 47540, "nasq": 23474.35, "vix": 14.2, "f_day": 4139, "i_day": -5944, "memo": ""}, {"date": "2025/12/30", "kospi": 4214.17, "lever": 47785, "nasq": 23419.08, "vix": 14.33, "f_day": -5215, "i_day": -4361, "memo": ""}, {"date": "2026/01/02", "kospi": 4309.63, "lever": 50645, "nasq": 23235.63, "vix": 14.51, "f_day": 7117, "i_day": -2916, "memo": ""}, {"date": "2026/01/05", "kospi": 4457.52, "lever": 54495, "nasq": 23395.82, "vix": 14.9, "f_day": 23013, "i_day": -8484, "memo": ""}, {"date": "2026/01/06", "kospi": 4525.48, "lever": 56375, "nasq": 23547.17, "vix": 14.75, "f_day": -7945, "i_day": -1118, "memo": ""}, {"date": "2026/01/07", "kospi": 4551.06, "lever": 57195, "nasq": 23584.28, "vix": 15.38, "f_day": 12011, "i_day": -11002, "memo": ""}, {"date": "2026/01/08", "kospi": 4552.37, "lever": 57000, "nasq": 23480.02, "vix": 15.45, "f_day": -5101, "i_day": -16125, "memo": ""}, {"date": "2026/01/09", "kospi": 4586.32, "lever": 57975, "nasq": 23671.35, "vix": 14.49, "f_day": -18379, "i_day": 12287, "memo": ""}, {"date": "2026/01/12", "kospi": 4624.79, "lever": 58625, "nasq": 23733.9, "vix": 15.12, "f_day": -4852, "i_day": 2232, "memo": ""}, {"date": "2026/01/13", "kospi": 4692.64, "lever": 60140, "nasq": 23709.87, "vix": 15.98, "f_day": -1515, "i_day": 9456, "memo": ""}, {"date": "2026/01/14", "kospi": 4723.1, "lever": 60805, "nasq": 23471.75, "vix": 16.75, "f_day": -6297, "i_day": 6137, "memo": ""}, {"date": "2026/01/15", "kospi": 4797.55, "lever": 62880, "nasq": 23530.02, "vix": 15.84, "f_day": 3381, "i_day": 13129, "memo": ""}, {"date": "2026/01/16", "kospi": 4840.74, "lever": 64310, "nasq": 23515.39, "vix": 15.86, "f_day": 1944, "i_day": 4216, "memo": ""}, {"date": "2026/01/19", "kospi": 4904.66, "lever": 66060, "nasq": 23515.39, "vix": 15.86, "f_day": 4531, "i_day": -316, "memo": ""}, {"date": "2026/01/20", "kospi": 4885.75, "lever": 65085, "nasq": 22954.32, "vix": 20.09, "f_day": -1456, "i_day": -6213, "memo": ""}, {"date": "2026/01/21", "kospi": 4909.93, "lever": 66115, "nasq": 23224.83, "vix": 16.9, "f_day": 2802, "i_day": 4785, "memo": ""}, {"date": "2026/01/22", "kospi": 4952.53, "lever": 67535, "nasq": 23436.02, "vix": 15.64, "f_day": -9417, "i_day": -3045, "memo": ""}, {"date": "2026/01/23", "kospi": 4990.07, "lever": 68410, "nasq": 23501.24, "vix": 16.09, "f_day": 27, "i_day": 5061, "memo": ""}, {"date": "2026/01/26", "kospi": 4949.59, "lever": 66995, "nasq": 23601.36, "vix": 16.15, "f_day": -4238, "i_day": -17844, "memo": ""}, {"date": "2026/01/27", "kospi": 5084.85, "lever": 71725, "nasq": 23817.1, "vix": 16.35, "f_day": 8761, "i_day": 2827, "memo": ""}, {"date": "2026/01/28", "kospi": 5170.81, "lever": 74210, "nasq": 23857.45, "vix": 16.35, "f_day": -274, "i_day": -15345, "memo": ""}, {"date": "2026/01/29", "kospi": 5221.25, "lever": 75905, "nasq": 23685.12, "vix": 16.88, "f_day": -17608, "i_day": -4575, "memo": ""}, {"date": "2026/01/30", "kospi": 5224.36, "lever": 76385, "nasq": 23461.82, "vix": 17.44, "f_day": -21701, "i_day": -6435, "memo": ""}, {"date": "2026/02/02", "kospi": 4949.67, "lever": 67460, "nasq": 23592.11, "vix": 16.34, "f_day": -32415, "i_day": -24584, "memo": ""}, {"date": "2026/02/03", "kospi": 5288.08, "lever": 78000, "nasq": 23255.19, "vix": 18.0, "f_day": 8932, "i_day": 23764, "memo": ""}, {"date": "2026/02/04", "kospi": 5371.1, "lever": 80035, "nasq": 22904.58, "vix": 18.64, "f_day": -12260, "i_day": 17858, "memo": ""}, {"date": "2026/02/05", "kospi": 5163.57, "lever": 73250, "nasq": 22540.59, "vix": 21.77, "f_day": -62030, "i_day": -26214, "memo": ""}, {"date": "2026/02/06", "kospi": 5089.14, "lever": 71605, "nasq": 23031.21, "vix": 20.37, "f_day": -37615, "i_day": 10644, "memo": ""}, {"date": "2026/02/09", "kospi": 5298.04, "lever": 77685, "nasq": 23238.67, "vix": 17.36, "f_day": 6075, "i_day": 34721, "memo": ""}, {"date": "2026/02/10", "kospi": 5301.69, "lever": 77750, "nasq": 23102.47, "vix": 17.79, "f_day": 1088, "i_day": 6359, "memo": ""}, {"date": "2026/02/11", "kospi": 5354.49, "lever": 79090, "nasq": 23066.47, "vix": 17.65, "f_day": 8575, "i_day": 6184, "memo": ""}, {"date": "2026/02/12", "kospi": 5522.27, "lever": 84800, "nasq": 22597.15, "vix": 20.82, "f_day": 31929, "i_day": 17835, "memo": ""}, {"date": "2026/02/13", "kospi": 5507.01, "lever": 84615, "nasq": 22546.67, "vix": 20.6, "f_day": -11817, "i_day": 154, "memo": ""}, {"date": "2026/02/19", "kospi": 5677.25, "lever": 89800, "nasq": 22682.73, "vix": 20.23, "f_day": -11337, "i_day": 16005, "memo": ""}, {"date": "2026/02/20", "kospi": 5808.53, "lever": 93980, "nasq": 22886.07, "vix": 19.09, "f_day": -9158, "i_day": 17071, "memo": ""}, {"date": "2026/02/23", "kospi": 5846.09, "lever": 95195, "nasq": 22627.27, "vix": 21.01, "f_day": -15404, "i_day": 1143, "memo": ""}, {"date": "2026/02/24", "kospi": 5969.64, "lever": 100005, "nasq": 22863.68, "vix": 19.55, "f_day": -2655, "i_day": 25194, "memo": ""}, {"date": "2026/02/25", "kospi": 6083.86, "lever": 104070, "nasq": 23152.08, "vix": 17.93, "f_day": -14839, "i_day": 12888, "memo": ""}, {"date": "2026/02/26", "kospi": 6307.27, "lever": 113520, "nasq": 22878.38, "vix": 18.63, "f_day": -25029, "i_day": 9539, "memo": ""}, {"date": "2026/02/27", "kospi": 6244.13, "lever": 111280, "nasq": 22668.21, "vix": 19.86, "f_day": -77476, "i_day": 626, "memo": ""}, {"date": "2026/03/03", "kospi": 5791.91, "lever": 93195, "nasq": 22516.69, "vix": 23.57, "f_day": -54214, "i_day": -10213, "memo": ""}, {"date": "2026/03/04", "kospi": 5093.54, "lever": 70500, "nasq": 22807.48, "vix": 21.15, "f_day": 2405, "i_day": -593, "memo": ""}, {"date": "2026/03/05", "kospi": 5583.9, "lever": 84485, "nasq": 22748.99, "vix": 23.75, "f_day": -4908, "i_day": -21118, "memo": ""}, {"date": "2026/03/06", "kospi": 5584.87, "lever": 84000, "nasq": 22387.68, "vix": 29.49, "f_day": -24335, "i_day": -15031, "memo": ""}, {"date": "2026/03/09", "kospi": 5251.87, "lever": 72850, "nasq": 22695.95, "vix": 25.5, "f_day": -35168, "i_day": -17697, "memo": ""}, {"date": "2026/03/10", "kospi": 5532.59, "lever": 82075, "nasq": 22697.1, "vix": 24.93, "f_day": 15346, "i_day": 14560, "memo": ""}, {"date": "2026/03/11", "kospi": 5609.95, "lever": 84000, "nasq": 22716.14, "vix": 24.23, "f_day": -3104, "i_day": 7185, "memo": ""}, {"date": "2026/03/12", "kospi": 5557.79, "lever": 82115, "nasq": 22311.98, "vix": 27.29, "f_day": -30111, "i_day": -2402, "memo": ""}, {"date": "2026/03/13", "kospi": 5487.24, "lever": 79725, "nasq": 22105.36, "vix": 27.19, "f_day": -18507, "i_day": -14599, "memo": ""}, {"date": "2026/03/16", "kospi": 5549.85, "lever": 82055, "nasq": 22374.18, "vix": 23.51, "f_day": -8510, "i_day": -172, "memo": ""}, {"date": "2026/03/17", "kospi": 5640.48, "lever": 85450, "nasq": 22479.53, "vix": 22.37, "f_day": -2834, "i_day": 9239, "memo": ""}, {"date": "2026/03/18", "kospi": 5925.03, "lever": 95240, "nasq": 22152.0, "vix": 23.5, "f_day": 12519, "i_day": 34968, "memo": ""}, {"date": "2026/03/19", "kospi": 5763.22, "lever": 89505, "nasq": 22152.0, "vix": 24.9, "f_day": -26390, "i_day": -10146, "memo": ""}, {"date": "2026/03/20", "kospi": 5781.2, "lever": 89320, "nasq": 21647.0, "vix": 26.78, "f_day": -14778, "i_day": -15155, "memo": ""}, {"date": "2026/03/23", "kospi": 5405.75, "lever": 77305, "nasq": 21947.0, "vix": 26.15, "f_day": -40676, "i_day": -46685, "memo": ""}, {"date": "2026/03/24", "kospi": 5553.92, "lever": 82305, "nasq": 21762.0, "vix": 26.95, "f_day": -19201, "i_day": 13826, "memo": ""}, {"date": "2026/03/25", "kospi": 5642.21, "lever": 84380, "nasq": 21930.0, "vix": 25.4, "f_day": -11433, "i_day": 27212, "memo": ""}, {"date": "2026/03/26", "kospi": 5460.46, "lever": 78500, "nasq": 21408.0, "vix": 27.46, "f_day": -34006, "i_day": -5892, "memo": ""}, {"date": "2026/03/27", "kospi": 5438.87, "lever": 77690, "nasq": 20948.0, "vix": 31.07, "f_day": -37036, "i_day": 5008, "memo": ""}, {"date": "2026/03/30", "kospi": 5277.3, "lever": 72895, "nasq": 20795.0, "vix": 30.61, "f_day": -25363, "i_day": 5315, "memo": ""}, {"date": "2026/03/31", "kospi": 5052.46, "lever": 66510, "nasq": 21591.0, "vix": 25.25, "f_day": -42362, "i_day": 9569, "memo": ""}, {"date": "2026/04/01", "kospi": 5478.7, "lever": 78830, "nasq": 21841.0, "vix": 24.54, "f_day": -4277, "i_day": 42337, "memo": ""}, {"date": "2026/04/02", "kospi": 5234.05, "lever": 71095, "nasq": 21879.18, "vix": 23.87, "f_day": -4155, "i_day": -13159, "memo": ""}, {"date": "2026/04/03", "kospi": 5377.3, "lever": 75240, "nasq": 21879.18, "vix": 23.87, "f_day": 9336, "i_day": 9047, "memo": ""}, {"date": "2026/04/06", "kospi": 5450.33, "lever": 77285, "nasq": null, "vix": null, "f_day": -2110, "i_day": 7764, "memo": ""}];
@@ -647,6 +923,7 @@ window.onload = () => {
   document.getElementById('headerDate').textContent =
     today.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   renderHistory();
+  loadLastSyncTime(); // 마지막 구글 시트 동기화 시각 표시
 
   // 히스토리에 데이터가 있으면 마지막 날짜 기준 자동 분석
   if (allHistory.length > 0) {
