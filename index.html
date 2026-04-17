@@ -819,6 +819,12 @@ async function syncFromGoogleSheet() {
       if (preview) preview.classList.remove('show');
       pendingUploadData = [];
 
+      // 최신 날짜 데이터로 입력 필드 자동 채움 + 분석 재실행
+      // (동기화로 최신 데이터가 들어왔으니, 화면의 모든 영역을 최신 기준으로 갱신)
+      if (allHistory.length > 0) {
+        runAnalysisFromHistory(allHistory[allHistory.length - 1]);
+      }
+
       // 동기화 시각 저장
       const now = Date.now();
       localStorage.setItem(GSHEET_SYNC_KEY, String(now));
